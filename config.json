@@ -1,0 +1,6 @@
+{
+    "DEFAULT": {
+        "SERVER_URL": "http://livemasjid.com:8000/",
+	"MOUNTS":["greensidemasjid"]
+    }
+}

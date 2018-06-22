@@ -5,15 +5,21 @@ import paho.mqtt.client as mqtt
 import sys
 import time
 import argparse
+import json
+
+with open('/opt/livemasjid/eBilal/config.json', 'r') as f:
+        config = json.load(f)
+        server_url = config['DEFAULT']['SERVER_URL'] 
+        mounts = config['DEFAULT']['MOUNTS']
 
 class LivemasjidClient:
     """User Object"""
-    def __init__(self, mountToPlay=[]):
+    def __init__(self, mountToPlay, config_url):
         self.mountToPlay = mountToPlay
         self.Instance = vlc.Instance()
         self.player = self.Instance.media_player_new()
         self.client = mqtt.Client()
-        self.baseURL = 'http://livemasjid.com:8000/'
+        self.baseURL = config_url
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self,client, userdata, flags, rc):
@@ -68,13 +74,13 @@ class LivemasjidClient:
 
 def main():
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
-    parser.add_argument('-m', '--mount', dest='mount')
-    args = parser.parse_args()
-    mount = args.mount
-    if mount == None: mount="activestream" 
-    livemasjid = LivemasjidClient()
+    #parser.add_argument('-m', '--mount', dest='mount')
+    #args = parser.parse_args()
+    #mount = args.mount
+    #if mount == None: mount="activestream" 
+    livemasjid = LivemasjidClient(mounts,server_url)
     livemasjid.connect()
-    livemasjid.tunein(mount,start=True)
+    #livemasjid.tunein(mount,start=True)
     while True:
         time.sleep(10)
 
