@@ -6,11 +6,16 @@ import sys
 import time
 import argparse
 import json
+import logging
+
+logger = logging.getLogger()
 
 with open('/opt/livemasjid/eBilal/config.json', 'r') as f:
         config = json.load(f)
+        logging.config.dictConfig(config)
         server_url = config['DEFAULT']['SERVER_URL'] 
         mounts = config['DEFAULT']['MOUNTS']
+        debug_mode = config['DEFAULT']['DEBUG']
 
 class LivemasjidClient:
     """User Object"""
@@ -23,7 +28,7 @@ class LivemasjidClient:
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self,client, userdata, flags, rc):
-        print("Connected with result code "+str(rc))
+        logger.info("Connected with result code "+str(rc))
 
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
@@ -31,7 +36,7 @@ class LivemasjidClient:
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self,client, userdata, msg):
-        print(msg.topic+" "+str(msg.payload))
+        logger.debug(msg.topic+" "+str(msg.payload))
         message = msg.topic.split('/')
         if ((message[1] in self.mountToPlay) and (len(message)>2)):
             if ("start" in message[2]):
