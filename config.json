@@ -1,7 +1,7 @@
 {
     "DEFAULT": {
         "SERVER_URL": "http://livemasjid.com:8000/",
-	"MOUNTS":["activestream","greensidemasjid","greensidemasjid.mp3"],
+	"MOUNTS":["activestream","greensidemasjid","greensidemasjid.mp3"]
     },
     "version": 1,
     "formatters":
@@ -32,7 +32,7 @@
       {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "precise",
-        "filename": "App.log",
+        "filename": "eBilal.log",
         "maxBytes": 100000,
         "backupCount": 2
        }
@@ -48,7 +48,7 @@
     },
     "root":
     {
-        "level": "WARN",
+        "level": "DEBUG",
         "handlers": ["console"]
     }
 }

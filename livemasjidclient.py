@@ -7,6 +7,7 @@ import time
 import argparse
 import json
 import logging
+import logging.config
 
 logger = logging.getLogger()
 
@@ -15,7 +16,6 @@ with open('/opt/livemasjid/eBilal/config.json', 'r') as f:
         logging.config.dictConfig(config)
         server_url = config['DEFAULT']['SERVER_URL'] 
         mounts = config['DEFAULT']['MOUNTS']
-        debug_mode = config['DEFAULT']['DEBUG']
 
 class LivemasjidClient:
     """User Object"""
@@ -38,12 +38,15 @@ class LivemasjidClient:
     def on_message(self,client, userdata, msg):
         logger.debug(msg.topic+" "+str(msg.payload))
         message = msg.topic.split('/')
-        if ((message[1] in self.mountToPlay) and (len(message)>2)):
-            if ("start" in message[2]):
+        logger.debug("Mount: "+message[1])
+        logger.debug("State: "+msg.payload)
+        if (message[1] in self.mountToPlay):
+            if ("started" in msg.payload):
                 self.playmount(message[1])
-            elif "stop" in message[2]:
+            elif "stopped" in msg.payload:
                 self.stop()
     def playmount(self,mount):
+        logger.debug("Playing mount "+mount)
         self.playurl(self.baseURL+mount)
 
     def playurl(self,url):
@@ -78,6 +81,7 @@ class LivemasjidClient:
 
 
 def main():
+    logger.info("Starting..")
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     #parser.add_argument('-m', '--mount', dest='mount')
     #args = parser.parse_args()
