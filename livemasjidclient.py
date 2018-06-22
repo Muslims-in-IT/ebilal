@@ -11,11 +11,13 @@ import logging.config
 
 logger = logging.getLogger()
 
-with open('/opt/livemasjid/eBilal/config.json', 'r') as f:
-        config = json.load(f)
-        logging.config.dictConfig(config)
-        server_url = config['DEFAULT']['SERVER_URL'] 
-        mounts = config['DEFAULT']['MOUNTS']
+def load_config():
+    global server_url, mounts
+    with open('/opt/livemasjid/eBilal/config.json', 'r') as f:
+            config = json.load(f)
+            logging.config.dictConfig(config)
+            server_url = config['DEFAULT']['SERVER_URL'] 
+            mounts = config['DEFAULT']['MOUNTS']
 
 class LivemasjidClient:
     """User Object"""
@@ -25,6 +27,9 @@ class LivemasjidClient:
         self.player = self.Instance.media_player_new()
         self.client = mqtt.Client()
         self.baseURL = config_url
+    
+    def set_mounts(self,mounts):
+        self.mountToPlay = mounts
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self,client, userdata, flags, rc):
@@ -38,8 +43,6 @@ class LivemasjidClient:
     def on_message(self,client, userdata, msg):
         logger.debug(msg.topic+" "+str(msg.payload))
         message = msg.topic.split('/')
-        logger.debug("Mount: "+message[1])
-        logger.debug("State: "+msg.payload)
         if (message[1] in self.mountToPlay):
             if ("started" in msg.payload):
                 self.playmount(message[1])
@@ -81,6 +84,7 @@ class LivemasjidClient:
 
 
 def main():
+    load_config()
     logger.info("Starting..")
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     #parser.add_argument('-m', '--mount', dest='mount')
@@ -91,7 +95,10 @@ def main():
     livemasjid.connect()
     #livemasjid.tunein(mount,start=True)
     while True:
-        time.sleep(10)
+        time.sleep(60)
+        logger.debug("reloading config file")
+        load_config()
+        livemasjid.set_mounts(mounts)
 
 if __name__ == "__main__":
     main()
