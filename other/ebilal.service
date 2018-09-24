@@ -3,6 +3,8 @@ Description=eBilal Service
 After=multi-user.target
 
 [Service]
+User=pi
+Group=pi
 Type=idle
 ExecStart=/usr/bin/python /opt/ebilal/livemasjidclient.py > /opt/ebilal/livemasjidclient.log 2>&1
 
