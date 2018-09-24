@@ -50,6 +50,7 @@ class LivemasjidClient:
                 self.playmount(message[1])
             elif "stopped" in msg.payload:
                 self.stop()
+
     def playmount(self,mount):
         logger.debug("Playing mount "+mount)
         self.playurl(self.baseURL+mount)
@@ -130,6 +131,9 @@ def main():
             time.sleep(0.1)
             phatbeat.clear()
             phatbeat.show()
+            if self.player.is_playing
+                self.player.pause
+            else: self.player.play
 
         @phatbeat.on(phatbeat.BTN_FASTFWD)
         def pb_fast_forward(pin):
@@ -142,7 +146,7 @@ def main():
         @phatbeat.on(phatbeat.BTN_ONOFF)
         def perform_shutdown(pin):
             os.system("sudo shutdown -h now")
-            
+
     while True:
         time.sleep(60)
         logger.debug("reloading config file")
