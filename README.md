@@ -17,5 +17,8 @@
 To check status:
 `sudo systemctl status myscript.service`
 
+## Optional
 
+If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-pi-zero-w-project-kit):
+`curl https://get.pimoroni.com/phatbeat | bash`
 
