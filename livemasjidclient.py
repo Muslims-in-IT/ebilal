@@ -27,6 +27,7 @@ class LivemasjidClient:
         self.player = self.Instance.media_player_new()
         self.client = mqtt.Client()
         self.baseURL = config_url
+        self.current_vol = 50
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
@@ -56,6 +57,7 @@ class LivemasjidClient:
         Media = self.Instance.media_new(url)
         Media.get_mrl()
         self.player.set_media(Media)
+        self.player.audio_set_volume(self.current_vol)
         self.player.play()
 
     def stop(self):
@@ -81,7 +83,14 @@ class LivemasjidClient:
 
     def disconnect(self):
         self.client.loop_stop()
-
+    
+    def volup(self):
+        self.current_vol = self.current_vol + 10
+        self.player.audio_set_volume(self.current_vol)
+    
+    def voldown(self):
+        self.current_vol = self.current_vol - 10
+        self.player.audio_set_volume(self.current_vol)
 
 def main():
     load_config()
@@ -94,6 +103,45 @@ def main():
     livemasjid = LivemasjidClient(mounts,server_url)
     livemasjid.connect()
     #livemasjid.tunein(mount,start=True)
+    try:
+        imp.find_module('phatbeat')
+        found = True
+    except ImportError:
+        found = False
+    if found:
+        import phatbeat
+        phatbeat.set_all(0,128,0,0.1)
+        phatbeat.show()
+        time.sleep(1)
+        phatbeat.clear()
+        phatbeat.show()
+
+        @phatbeat.on(phatbeat.BTN_VOLDN)
+        def pb_volume_down(pin):
+            self.volup()
+
+        @phatbeat.on(phatbeat.BTN_VOLUP)
+        def pb_volume_up(pin):
+            self.voldown()
+
+        @phatbeat.on(phatbeat.BTN_PLAYPAUSE)
+        def pb_play_pause(pin):
+            time.sleep(0.1)
+            phatbeat.clear()
+            phatbeat.show()
+
+        @phatbeat.on(phatbeat.BTN_FASTFWD)
+        def pb_fast_forward(pin):
+            pass
+
+        @phatbeat.on(phatbeat.BTN_REWIND)
+        def pb_rewind(pin):
+            pass
+
+        @phatbeat.on(phatbeat.BTN_ONOFF)
+        def perform_shutdown(pin):
+            os.system("sudo shutdown -h now")
+            
     while True:
         time.sleep(60)
         logger.debug("reloading config file")
