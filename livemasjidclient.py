@@ -9,6 +9,7 @@ import json
 import logging
 import logging.config
 import imp
+import os
 
 logger = logging.getLogger()
 
@@ -99,6 +100,9 @@ class LivemasjidClient:
         self.current_vol = self.current_vol - 10
         self.player.audio_set_volume(self.current_vol)
 
+    def getlivestreams(self):
+        return self.livestreams
+
 def main():
     load_config()
     logger.info("Starting..")
@@ -143,18 +147,18 @@ def main():
         @phatbeat.on(phatbeat.BTN_FASTFWD)
         def pb_fast_forward(pin):
             try:
-                index = self.livestreams.index(self.playing)
-                self.playmount(self.livemasjid[index+1])
-            except expression as identifier:
-                self.playmount(self.livemasjid[0])
+                index = livemasjid.livestreams.index(livemasjid.playing)
+                livemasjid.playmount(livemasjid.getlivestreams()[index+1])
+            except:
+                livemasjid.playmount(livemasjid.getlivestreams()[0])
 
         @phatbeat.on(phatbeat.BTN_REWIND)
         def pb_rewind(pin):
             try:
-                index = self.livestreams.index(self.playing)
-                self.playmount(self.livemasjid[index-1])
-            except expression as identifier:
-                self.playmount(self.livemasjid[0])
+                index = livemasjid.livestreams.index(livemasjid.playing)
+                livemasjid.playmount(livemasjid.getlivestreams()[index-1])
+            except:
+                livemasjid.playmount(livemasjid.getlivestreams()[0])
             
 
         @phatbeat.on(phatbeat.BTN_ONOFF)
