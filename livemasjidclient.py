@@ -120,20 +120,20 @@ def main():
 
         @phatbeat.on(phatbeat.BTN_VOLDN)
         def pb_volume_down(pin):
-            self.volup()
+            livemasjid.voldown()
 
         @phatbeat.on(phatbeat.BTN_VOLUP)
         def pb_volume_up(pin):
-            self.voldown()
+            livemasjid.volup()
 
         @phatbeat.on(phatbeat.BTN_PLAYPAUSE)
         def pb_play_pause(pin):
             time.sleep(0.1)
             phatbeat.clear()
             phatbeat.show()
-            if self.player.is_playing
-                self.player.pause
-            else: self.player.play
+            if livemasjid.player.is_playing:
+                livemasjid.player.pause
+            else: livemasjid.player.play
 
         @phatbeat.on(phatbeat.BTN_FASTFWD)
         def pb_fast_forward(pin):
