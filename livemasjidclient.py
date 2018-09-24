@@ -13,7 +13,7 @@ logger = logging.getLogger()
 
 def load_config():
     global server_url, mounts
-    with open('/opt/livemasjid/eBilal/config.json', 'r') as f:
+    with open('/opt/ebilal/config.json', 'r') as f:
             config = json.load(f)
             logging.config.dictConfig(config)
             server_url = config['DEFAULT']['SERVER_URL'] 

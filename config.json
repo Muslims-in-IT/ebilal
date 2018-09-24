@@ -32,7 +32,7 @@
       {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "precise",
-        "filename": "/opt/livemasjid/eBilal/eBilal.log",
+        "filename": "/opt/ebilal/eBilal.log",
         "maxBytes": 100000,
         "backupCount": 2
        }
