@@ -29,6 +29,8 @@ class LivemasjidClient:
         self.client = mqtt.Client()
         self.baseURL = config_url
         self.current_vol = 50
+        self.livestreams = []
+        self.playing = None
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
@@ -48,12 +50,15 @@ class LivemasjidClient:
         if (message[1] in self.mountToPlay):
             if ("started" in msg.payload):
                 self.playmount(message[1])
+                self.livestreams.append(message[1])
             elif "stopped" in msg.payload:
                 self.stop()
+                self.livestreams.remove(message[1])
 
     def playmount(self,mount):
         logger.debug("Playing mount "+mount)
         self.playurl(self.baseURL+mount)
+        self.playing = mount
 
     def playurl(self,url):
         Media = self.Instance.media_new(url)
@@ -137,11 +142,20 @@ def main():
 
         @phatbeat.on(phatbeat.BTN_FASTFWD)
         def pb_fast_forward(pin):
-            pass
+            try:
+                index = self.livestreams.index(self.playing)
+                self.playmount(self.livemasjid[index+1])
+            except expression as identifier:
+                self.playmount(self.livemasjid[0])
 
         @phatbeat.on(phatbeat.BTN_REWIND)
         def pb_rewind(pin):
-            pass
+            try:
+                index = self.livestreams.index(self.playing)
+                self.playmount(self.livemasjid[index-1])
+            except expression as identifier:
+                self.playmount(self.livemasjid[0])
+            
 
         @phatbeat.on(phatbeat.BTN_ONOFF)
         def perform_shutdown(pin):
