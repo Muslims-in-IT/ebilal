@@ -1,5 +1,7 @@
 # eBilal
 
+This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup, it will play your selected live audio streams from livemasjid.com.
+
 1. Install latest Raspbian Lite
 2. Setup Wifi and SSH
 3. Boot and SSH
@@ -12,6 +14,7 @@
 10. `sudo chmod 644 /lib/systemd/system/ebilal.service`
 11. `sudo systemctl daemon-reload`
 12. `sudo systemctl enable ebilal.service`
+13. Modify config.json to set streams to listen to (pick from livemasjid.com using the last word in the stream URL)
 13. `sudo reboot`
 
 To check status:
