@@ -149,17 +149,18 @@ def main():
             try:
                 index = livemasjid.livestreams.index(livemasjid.playing)
                 livemasjid.playmount(livemasjid.getlivestreams()[index+1])
-            except:
+            except Exception as e:
                 livemasjid.playmount(livemasjid.getlivestreams()[0])
+                logger.error(e.message, e.args)
 
         @phatbeat.on(phatbeat.BTN_REWIND)
         def pb_rewind(pin):
             try:
                 index = livemasjid.livestreams.index(livemasjid.playing)
                 livemasjid.playmount(livemasjid.getlivestreams()[index-1])
-            except:
+            except Exception as e:
                 livemasjid.playmount(livemasjid.getlivestreams()[0])
-            
+                logger.error(e.message, e.args)
 
         @phatbeat.on(phatbeat.BTN_ONOFF)
         def perform_shutdown(pin):
