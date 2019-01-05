@@ -2,7 +2,7 @@
 
 This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup, it will play your selected live audio streams from livemasjid.com.
 
-1. Install latest Raspbian Lite
+1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup Wifi and SSH
 3. Boot and SSH
 4. `sudo apt install git python-pip vlc-nox`
