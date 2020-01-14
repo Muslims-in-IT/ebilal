@@ -10,6 +10,7 @@ import logging
 import logging.config
 import imp
 import os
+import subprocess
 
 logger = logging.getLogger()
 
@@ -25,8 +26,8 @@ class LivemasjidClient:
     """User Object"""
     def __init__(self, mountToPlay, config_url):
         self.mountToPlay = mountToPlay
-        self.Instance = vlc.Instance()
-        self.player = self.Instance.media_player_new()
+        #self.Instance = vlc.Instance()
+        #self.player = self.Instance.media_player_new()
         self.client = mqtt.Client()
         self.baseURL = config_url
         self.current_vol = 50
@@ -62,14 +63,18 @@ class LivemasjidClient:
         self.playing = mount
 
     def playurl(self,url):
-        Media = self.Instance.media_new(url)
-        Media.get_mrl()
-        self.player.set_media(Media)
-        self.player.audio_set_volume(self.current_vol)
-        self.player.play()
+        logger.debug("Starting media player")
+        self.process = subprocess.call(["ffplay","-autoexit" ,url])
+        #Media = self.Instance.media_new(url)
+        #Media.get_mrl()
+        #self.player.set_media(Media)
+        #self.player.audio_set_volume(self.current_vol)
+        #self.player.play()
 
     def stop(self):
-        self.player.stop()
+        logger.debug("stopping media player")
+        self.process.kill()
+        #self.player.stop()
 
     def tunein(self,mount,start=False):
         self.mountToPlay=mount
