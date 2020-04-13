@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #from gluon import *
-import vlc
+#import vlc
 import paho.mqtt.client as mqtt
 import sys
 import time
@@ -11,6 +11,7 @@ import logging.config
 import imp
 import os
 import subprocess
+import alsaaudio
 
 logger = logging.getLogger()
 
@@ -33,6 +34,7 @@ class LivemasjidClient:
         self.current_vol = 50
         self.livestreams = []
         self.playing = None
+        self.mixer = alsaaudio.Mixer()
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
@@ -98,12 +100,12 @@ class LivemasjidClient:
         self.client.loop_stop()
     
     def volup(self):
-        self.current_vol = self.current_vol + 10
-        self.player.audio_set_volume(self.current_vol)
+        self.current_vol = self.mixer.getvolume() + 10
+        self.mixer.setvolume((self.current_vol))
     
     def voldown(self):
-        self.current_vol = self.current_vol - 10
-        self.player.audio_set_volume(self.current_vol)
+        self.current_vol =  self.mixer.getvolume() - 10
+        self.mixer.setvolume(self.current_vol)
 
     def getlivestreams(self):
         return self.livestreams
