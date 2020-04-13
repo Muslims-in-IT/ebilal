@@ -11,4 +11,4 @@ RUN git clone git@bitbucket.org:mitpeople/ebilal.git
 RUN cd ebilal
 RUN pip install requirements.txt
 
-CMD ["pythoni /opt/ebilal/livemasjidclient.py > /opt/ebilal/livemasjidclient.log 2>&1"]
+ENTRYPOINT ["python","/opt/ebilal/livemasjidclient.py"]
