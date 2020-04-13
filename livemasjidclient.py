@@ -111,15 +111,12 @@ class LivemasjidClient:
 
 def main():
     load_config()
+    if len(sys.argv) > 1:
+        mounts = sys.argv[1].split(',')
     logger.info("Starting..")
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
-    #parser.add_argument('-m', '--mount', dest='mount')
-    #args = parser.parse_args()
-    #mount = args.mount
-    #if mount == None: mount="activestream" 
     livemasjid = LivemasjidClient(mounts,server_url)
     livemasjid.connect()
-    #livemasjid.tunein(mount,start=True)
     try:
         imp.find_module('phatbeat')
         found = True
@@ -175,8 +172,8 @@ def main():
     while True:
         time.sleep(60)
         logger.debug("reloading config file")
-        load_config()
-        livemasjid.set_mounts(mounts)
+        #load_config()
+        #livemasjid.set_mounts(mounts)
 
 if __name__ == "__main__":
     main()
