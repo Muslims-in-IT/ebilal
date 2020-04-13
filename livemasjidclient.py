@@ -109,7 +109,7 @@ class LivemasjidClient:
     def getlivestreams(self):
         return self.livestreams
 
-def main()
+def main():
     mounts = ["activestream"]
     load_config()
     if len(sys.argv) > 1:
