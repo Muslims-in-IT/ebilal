@@ -8,4 +8,4 @@ RUN apt-get update && \
 
 RUN cd /opt/ && git clone https://yusuf_kaka@bitbucket.org/mitpeople/ebilal.git && cd ebilal && pip3 install -r ./requirements.txt
 
-ENTRYPOINT ["python","/opt/ebilal/livemasjidclient.py"]
+ENTRYPOINT ["python3","/opt/ebilal/livemasjidclient.py"]
