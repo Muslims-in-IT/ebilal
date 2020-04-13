@@ -2,10 +2,6 @@
 
 This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup, it will play your selected live audio streams from livemasjid.com.
 
-## Ready made image
-
-Download [here](https://bitbucket.org/mitpeople/ebilal-images)
-
 ## Roll your own instructions
 
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
@@ -31,3 +27,6 @@ To check status:
 If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-pi-zero-w-project-kit):
 `curl https://get.pimoroni.com/phatbeat | bash`
 
+## Docker
+Experimental: A docker image has been setup, usage:
+docker run mitpeople/ebilal:latest <mountname>
