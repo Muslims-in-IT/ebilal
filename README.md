@@ -11,8 +11,8 @@ Download [here](https://bitbucket.org/mitpeople/ebilal-images)
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup [Wifi and SSH](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 3. Boot and SSH
-4. `sudo apt install git python-pip ffplay python-alsaaudio`
-5. `pip install paho-mqtt`
+4. `sudo apt install git python-pip ffplay`
+5. `pip install requirements.txt`
 6. `cd /opt/`
 7. `sudo git clone https://bitbucket.org/mitpeople/ebilal.git`
 8. `sudo chown -R pi:pi ebilal`
