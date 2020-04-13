@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 #from gluon import *
-#import vlc
 import paho.mqtt.client as mqtt
 import sys
 import time
