@@ -7,8 +7,8 @@ This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup [Wifi and SSH](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 3. Boot and SSH
-4. `sudo apt install git python-pip ffmpeg ssh-client`
-5. `pip install -r requirements.txt`
+4. `sudo apt install git python3 python3-pip ffmpeg ssh-client`
+5. `pip3 install -r requirements.txt`
 6. `cd /opt/`
 7. `sudo git clone https://bitbucket.org/mitpeople/ebilal.git`
 8. `sudo chown -R pi:pi ebilal`
