@@ -7,7 +7,8 @@ import argparse
 import json
 import logging
 import logging.config
-import imp
+import importlib
+import importlib.util
 import os
 import subprocess
 import alsaaudio
@@ -26,8 +27,6 @@ class LivemasjidClient:
     """User Object"""
     def __init__(self, mountToPlay, config_url):
         self.mountToPlay = mountToPlay
-        #self.Instance = vlc.Instance()
-        #self.player = self.Instance.media_player_new()
         self.client = mqtt.Client()
         self.baseURL = config_url
         self.current_vol = 50
@@ -66,16 +65,10 @@ class LivemasjidClient:
     def playurl(self,url):
         logger.debug("Starting media player")
         self.process = subprocess.call(["ffplay","-autoexit" ,url])
-        #Media = self.Instance.media_new(url)
-        #Media.get_mrl()
-        #self.player.set_media(Media)
-        #self.player.audio_set_volume(self.current_vol)
-        #self.player.play()
 
     def stop(self):
         logger.debug("stopping media player")
         self.process.kill()
-        #self.player.stop()
 
     def tunein(self,mount,start=False):
         self.mountToPlay=mount
@@ -93,7 +86,6 @@ class LivemasjidClient:
         # Other loop*() functions are available that give a threaded interface and a
         # manual interface.
         self.client.loop_start()
-        #client.loop_forever()
 
     def disconnect(self):
         self.client.loop_stop()
@@ -113,18 +105,10 @@ def main():
     load_config()
     logger.info("Starting..")
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
-    #parser.add_argument('-m', '--mount', dest='mount')
-    #args = parser.parse_args()
-    #mount = args.mount
-    #if mount == None: mount="activestream" 
     livemasjid = LivemasjidClient(mounts,server_url)
     livemasjid.connect()
-    #livemasjid.tunein(mount,start=True)
-    try:
-        imp.find_module('phatbeat')
-        found = True
-    except ImportError:
-        found = False
+    phat_spec = util.find_spec("phatbeat")
+    found = phat_spec is not None
     if found:
         import phatbeat
         phatbeat.set_all(0,128,0,0.1)
