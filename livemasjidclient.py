@@ -21,6 +21,7 @@ def load_config():
             logging.config.dictConfig(config)
             server_url = config['DEFAULT']['SERVER_URL'] 
             mounts = config['DEFAULT']['MOUNTS']
+    logger.debug("Config loaded, listening to "+mounts[0])
 
 class LivemasjidClient:
     """User Object"""
@@ -49,7 +50,7 @@ class LivemasjidClient:
         logger.debug(msg.topic+" "+str(msg.payload))
         message = msg.topic.split('/')
         if (message[1] in self.mountToPlay):
-            if ("started" in msg.payload):
+            if ("started" in msg.payload.decode()):
                 self.playmount(message[1])
                 self.livestreams.append(message[1])
             elif "stopped" in msg.payload:
@@ -106,9 +107,12 @@ def main():
     if len(sys.argv) > 1:
         mounts = sys.argv[1].split(',')
     logger.info("Starting..")
+    logger.info("Listeng to "+mounts[0])
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid = LivemasjidClient(mounts,server_url)
     livemasjid.connect()
+
+    #Setup the Pimoroni module if present
     phat_spec = util.find_spec("phatbeat")
     found = phat_spec is not None
     if found:
@@ -157,12 +161,13 @@ def main():
         @phatbeat.on(phatbeat.BTN_ONOFF)
         def perform_shutdown(pin):
             os.system("sudo shutdown -h now")
-
+    
+    #Main loop
     while True:
         time.sleep(60)
         logger.debug("reloading config file")
-        #load_config()
-        #livemasjid.set_mounts(mounts)
+        load_config()
+        livemasjid.set_mounts(mounts)
 
 if __name__ == "__main__":
     main()
