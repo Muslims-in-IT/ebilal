@@ -91,11 +91,11 @@ class LivemasjidClient:
         self.client.loop_stop()
     
     def volup(self):
-        self.current_vol = self.mixer.getvolume() + 10
+        self.current_vol = self.mixer.getvolume()[0] + 10
         self.mixer.setvolume((self.current_vol))
     
     def voldown(self):
-        self.current_vol =  self.mixer.getvolume() - 10
+        self.current_vol =  self.mixer.getvolume()[0] - 10
         self.mixer.setvolume(self.current_vol)
 
     def getlivestreams(self):
@@ -116,6 +116,7 @@ def main():
     phat_spec = util.find_spec("phatbeat")
     found = phat_spec is not None
     if found:
+        logger.info("Phatbeat found")
         import phatbeat
         phatbeat.set_all(0,128,0,0.1)
         phatbeat.show()
@@ -126,10 +127,12 @@ def main():
         @phatbeat.on(phatbeat.BTN_VOLDN)
         def pb_volume_down(pin):
             livemasjid.voldown()
+            logger.debug("Volume down pressed")
 
         @phatbeat.on(phatbeat.BTN_VOLUP)
         def pb_volume_up(pin):
             livemasjid.volup()
+            logger.debug("Volume up pressed")
 
         @phatbeat.on(phatbeat.BTN_PLAYPAUSE)
         def pb_play_pause(pin):
