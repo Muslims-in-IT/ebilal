@@ -7,8 +7,7 @@ import argparse
 import json
 import logging
 import logging.config
-import importlib
-import importlib.util
+from importlib import util
 import os
 import subprocess
 import alsaaudio
