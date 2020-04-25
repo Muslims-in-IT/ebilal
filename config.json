@@ -1,7 +1,7 @@
 {
     "DEFAULT": {
         "SERVER_URL": "http://livemasjid.com:8000/",
-	"MOUNTS":["greensidemasjid.mp3","greensidemasjid","activestream"]
+	"MOUNTS":["greensidemasjid.mp3","greensidemasjid"]
     },
     "version": 1,
     "formatters":

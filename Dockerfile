@@ -1,4 +1,5 @@
 FROM balenalib/raspberry-pi-debian-python
+COPY qemu-arm-static /usr/bin
 USER root
 
 RUN apt-get update && \
