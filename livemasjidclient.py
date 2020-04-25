@@ -102,7 +102,10 @@ class LivemasjidClient:
         return self.livestreams
 
 def main():
+    mounts = ["activestream"]
     load_config()
+    if len(sys.argv) > 1:
+        mounts = sys.argv[1].split(',')
     logger.info("Starting..")
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid = LivemasjidClient(mounts,server_url)
@@ -159,8 +162,8 @@ def main():
     while True:
         time.sleep(60)
         logger.debug("reloading config file")
-        load_config()
-        livemasjid.set_mounts(mounts)
+        #load_config()
+        #livemasjid.set_mounts(mounts)
 
 if __name__ == "__main__":
     main()
