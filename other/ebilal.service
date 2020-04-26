@@ -6,7 +6,8 @@ After=multi-user.target
 User=pi
 Group=pi
 Type=idle
-ExecStart=/usr/bin/python3 /opt/ebilal/livemasjidclient.py > /opt/ebilal/livemasjidclient.log 2>&1
+WorkingDirectory=/opt/ebilal/
+ExecStart=python3 livemasjidclient.py
 Restart=always
 
 [Install]
