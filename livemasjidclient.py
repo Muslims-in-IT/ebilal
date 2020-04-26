@@ -15,13 +15,12 @@ import alsaaudio
 logger = logging.getLogger()
 
 def load_config():
-    global server_url, mounts
     with open('/opt/ebilal/config.json', 'r') as f:
             config = json.load(f)
             logging.config.dictConfig(config)
             server_url = config['DEFAULT']['SERVER_URL'] 
             mounts = config['DEFAULT']['MOUNTS']
-    logger.debug("Config loaded, listening to "+mounts[0])
+    return mounts,server_url
 
 class LivemasjidClient:
     """User Object"""
@@ -64,7 +63,7 @@ class LivemasjidClient:
 
     def playurl(self,url):
         logger.debug("Starting media player")
-        self.process = subprocess.call(["ffplay","-autoexit" ,url])
+        self.process = subprocess.call(["ffplay","-nostats","-autoexit" ,url])
 
     def stop(self):
         logger.debug("stopping media player")
@@ -102,8 +101,7 @@ class LivemasjidClient:
         return self.livestreams
 
 def main():
-    mounts = ["activestream"]
-    load_config()
+    mounts,server_url = load_config()
     if len(sys.argv) > 1:
         mounts = sys.argv[1].split(',')
     logger.info("Starting..")
