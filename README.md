@@ -29,4 +29,4 @@ If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-p
 
 ## Docker
 Experimental: A docker image has been setup, usage:
-docker run mitpeople/ebilal:latest <mountname>
+docker run mitpeople/ebilal:latest <mountname> --device /dev/snd 
