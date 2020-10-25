@@ -1,5 +1,5 @@
 FROM balenalib/raspberry-pi-debian-python
-COPY qemu-arm-static /usr/bin
+RUN [ "cross-build-start" ]
 USER root
 
 RUN apt-get update && \
@@ -9,3 +9,4 @@ RUN apt-get update && \
 RUN ls
 RUN cd /opt/ && git clone https://yusuf_kaka@bitbucket.org/mitpeople/ebilal.git && cd ebilal && pip3 install -r ./requirements.txt
 ENTRYPOINT ["python3","/opt/ebilal/livemasjidclient.py"]
+RUN [ "cross-build-end" ]
