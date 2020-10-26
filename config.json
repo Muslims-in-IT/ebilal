@@ -1,7 +1,7 @@
 {
     "DEFAULT": {
         "SERVER_URL": "http://livemasjid.com:8000/",
-	"MOUNTS":["greensidemasjid.mp3","greensidemasjid","activestream"]
+	"MOUNTS":["greensidemasjid.mp3","greensidemasjid"]
     },
     "version": 1,
     "formatters":
@@ -24,7 +24,7 @@
       "console":
       {
         "class": "logging.StreamHandler",
-        "level": "DEBUG",
+        "level": "INFO",
         "formatter": "simple",
         "stream": "ext://sys.stdout"
       }, 
@@ -41,14 +41,14 @@
     {
       "Main":
       {
-        "level": "DEBUG",
+        "level": "INFO",
         "handlers": ["console", "file"],
         "propagate": 0
       }
     },
     "root":
     {
-        "level": "DEBUG",
+        "level": "INFO",
         "handlers": ["console","file"]
     }
 }

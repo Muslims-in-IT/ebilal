@@ -52,9 +52,9 @@ class LivemasjidClient:
             if ("started" in msg.payload.decode()):
                 self.playmount(message[1])
                 self.livestreams.append(message[1])
-            elif "stopped" in msg.payload:
+            elif "stopped" in msg.payload.decode():
                 self.stop()
-                self.livestreams.remove(message[1])
+                if message[1] in self.livestreams: self.livestreams.remove(message[1])
 
     def playmount(self,mount):
         logger.debug("Playing mount "+mount)
@@ -67,7 +67,7 @@ class LivemasjidClient:
 
     def stop(self):
         logger.debug("stopping media player")
-        self.process.kill()
+        if hasattr(self, 'process'): self.process.kill()
 
     def tunein(self,mount,start=False):
         self.mountToPlay=mount
