@@ -3,7 +3,7 @@ RUN [ "cross-build-start" ]
 USER root
 
 RUN apt-get update && \
-    apt-get -qy install ca-certificates build-essential git ffmpeg python3-dev && \
+    apt-get -qy install ca-certificates build-essential git ffmpeg python3-dev libasound2-dev && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get -qy clean all
 RUN pip3 install --upgrade pip
