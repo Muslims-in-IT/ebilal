@@ -29,7 +29,7 @@ class LivemasjidClient:
         self.playing = None
         self.mixer = alsaaudio.Mixer()
         self.current_vol = self.mixer.getvolume()[0]
-        self.load_config
+        self.load_config()
     
     def load_config(self):
         logger.debug("reloading config file")
@@ -37,7 +37,6 @@ class LivemasjidClient:
         self.baseURL = settings.default.server_url
         logger.debug("Server URL: "+ self.baseURL)
         self.mountToPlay = settings.default.mounts
-        logger.debug("Mount to play: "+ self.mountToPlay)
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
@@ -165,7 +164,7 @@ def main():
         def perform_shutdown(pin):
             os.system("sudo shutdown -h now")
 
-    #Main loop
+    #Main
     wm = pyinotify.WatchManager()
     wm.add_watch('settings.toml', pyinotify.IN_MODIFY, livemasjid.load_config())
     notifier = pyinotify.Notifier(wm)
