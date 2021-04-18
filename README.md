@@ -7,17 +7,18 @@ This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup [Wifi and SSH](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 3. Boot and SSH
-4. `sudo apt install git python-pip ffmpeg ssh-client`
-5. `pip install -r requirements.txt`
-6. `cd /opt/`
-7. `sudo git clone https://bitbucket.org/mitpeople/ebilal.git`
-8. `sudo chown -R pi:pi ebilal`
-9. `sudo cp ebilal/other/ebilal.service /lib/systemd/system/`
-10. `sudo chmod 644 /lib/systemd/system/ebilal.service`
-11. `sudo systemctl daemon-reload`
-12. `sudo systemctl enable ebilal.service`
-13. Modify config.json to set streams to listen to (pick from livemasjid.com using the last word in the stream URL)
-13. `sudo reboot`
+4. `sudo apt install git python3 python3-pip ffmpeg ssh-client`
+5. `cd /opt/`
+6. `sudo git clone https://bitbucket.org/mitpeople/ebilal.git`
+7. `sudo chown -R pi:pi ebilal`
+8. `cd ebilal`
+9. `pip3 install -r requirements.txt`
+10. `sudo cp other/ebilal.service /lib/systemd/system/`
+11. `sudo chmod 644 /lib/systemd/system/ebilal.service`
+12. `sudo systemctl daemon-reload`
+13. `sudo systemctl enable ebilal.service`
+14. Modify config.json to set streams to listen to (pick from livemasjid.com using the last word in the stream URL)
+15. `sudo reboot`
 
 To check status:
 `sudo systemctl status myscript.service`
@@ -29,4 +30,4 @@ If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-p
 
 ## Docker
 Experimental: A docker image has been setup, usage:
-docker run mitpeople/ebilal:latest <mountname>
+docker run mitpeople/ebilal:latest <mountname> --device /dev/snd 

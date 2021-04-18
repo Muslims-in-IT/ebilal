@@ -7,7 +7,7 @@ import argparse
 import json
 import logging
 import logging.config
-import imp
+from importlib import util
 import os
 import subprocess
 import alsaaudio
@@ -18,19 +18,17 @@ import settings_api
 logger = logging.getLogger()
 
 def load_config():
-    global server_url, mounts
     with open('/opt/ebilal/config.json', 'r') as f:
             config = json.load(f)
             logging.config.dictConfig(config)
             server_url = config['DEFAULT']['SERVER_URL'] 
             mounts = config['DEFAULT']['MOUNTS']
+    return mounts,server_url
 
 class LivemasjidClient:
     """User Object"""
     def __init__(self, mountToPlay, config_url):
         self.mountToPlay = mountToPlay
-        #self.Instance = vlc.Instance()
-        #self.player = self.Instance.media_player_new()
         self.client = mqtt.Client()
         self.baseURL = config_url
         self.current_vol = 50
@@ -54,12 +52,12 @@ class LivemasjidClient:
         logger.debug(msg.topic+" "+str(msg.payload))
         message = msg.topic.split('/')
         if (message[1] in self.mountToPlay):
-            if ("started" in msg.payload):
+            if ("started" in msg.payload.decode()):
                 self.playmount(message[1])
                 self.livestreams.append(message[1])
-            elif "stopped" in msg.payload:
+            elif "stopped" in msg.payload.decode():
                 self.stop()
-                self.livestreams.remove(message[1])
+                if message[1] in self.livestreams: self.livestreams.remove(message[1])
 
     def playmount(self,mount):
         logger.debug("Playing mount "+mount)
@@ -68,17 +66,11 @@ class LivemasjidClient:
 
     def playurl(self,url):
         logger.debug("Starting media player")
-        self.process = subprocess.call(["ffplay","-autoexit" ,url])
-        #Media = self.Instance.media_new(url)
-        #Media.get_mrl()
-        #self.player.set_media(Media)
-        #self.player.audio_set_volume(self.current_vol)
-        #self.player.play()
+        self.process = subprocess.Popen("ffplay -vn -nostats -autoexit "+ url,shell=True)
 
     def stop(self):
         logger.debug("stopping media player")
-        self.process.kill()
-        #self.player.stop()
+        if hasattr(self, 'process'): self.process.kill()
 
     def tunein(self,mount,start=False):
         self.mountToPlay=mount
@@ -96,38 +88,42 @@ class LivemasjidClient:
         # Other loop*() functions are available that give a threaded interface and a
         # manual interface.
         self.client.loop_start()
-        #client.loop_forever()
 
     def disconnect(self):
         self.client.loop_stop()
     
     def volup(self):
-        self.current_vol = self.mixer.getvolume() + 10
+        self.current_vol = self.mixer.getvolume()[0] + 10
         self.mixer.setvolume((self.current_vol))
     
     def voldown(self):
-        self.current_vol =  self.mixer.getvolume() - 10
+        self.current_vol =  self.mixer.getvolume()[0] - 10
         self.mixer.setvolume(self.current_vol)
 
     def getlivestreams(self):
         return self.livestreams
 
 def main():
+<<<<<<< HEAD
     mounts = ["activestream"]
     #uvicorn.run(app, host="127.0.0.1", port=5000, log_level="info")
     load_config()
+=======
+    mounts,server_url = load_config()
+>>>>>>> 6939137ee5dbd6f7bd01fde8d8d1d9c55608c9a1
     if len(sys.argv) > 1:
         mounts = sys.argv[1].split(',')
     logger.info("Starting..")
+    logger.info("Listeng to "+mounts[0])
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid = LivemasjidClient(mounts,server_url)
     livemasjid.connect()
-    try:
-        imp.find_module('phatbeat')
-        found = True
-    except ImportError:
-        found = False
+
+    #Setup the Pimoroni module if present
+    phat_spec = util.find_spec("phatbeat")
+    found = phat_spec is not None
     if found:
+        logger.info("Phatbeat found")
         import phatbeat
         phatbeat.set_all(0,128,0,0.1)
         phatbeat.show()
@@ -138,10 +134,12 @@ def main():
         @phatbeat.on(phatbeat.BTN_VOLDN)
         def pb_volume_down(pin):
             livemasjid.voldown()
+            logger.debug("Volume down pressed")
 
         @phatbeat.on(phatbeat.BTN_VOLUP)
         def pb_volume_up(pin):
             livemasjid.volup()
+            logger.debug("Volume up pressed")
 
         @phatbeat.on(phatbeat.BTN_PLAYPAUSE)
         def pb_play_pause(pin):
@@ -173,7 +171,8 @@ def main():
         @phatbeat.on(phatbeat.BTN_ONOFF)
         def perform_shutdown(pin):
             os.system("sudo shutdown -h now")
-
+    
+    #Main loop
     while True:
         time.sleep(60)
         logger.debug("reloading config file")
