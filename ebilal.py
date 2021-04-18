@@ -11,7 +11,6 @@ from importlib import util
 import os
 import subprocess
 import alsaaudio
-import settings_api
 
 
 logger = logging.getLogger()

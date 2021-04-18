@@ -1,5 +1,5 @@
 [Unit]
-Description=eBilal Service
+Description=eBilal API Service
 After=multi-user.target
 
 [Service]
@@ -7,7 +7,7 @@ User=pi
 Group=pi
 Type=idle
 WorkingDirectory=/opt/ebilal/
-ExecStart=python3 ebilal.py
+ExecStart=uvicorn ebilal_api:app --reload
 Restart=always
 
 [Install]
