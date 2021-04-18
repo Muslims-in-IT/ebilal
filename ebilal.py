@@ -25,7 +25,7 @@ class LivemasjidClient:
     def __init__(self):
         self.client = mqtt.Client()
         self.livestreams = []
-        self.self.mountToPlay = []
+        self.mountToPlay = []
         self.playing = None
         self.mixer = alsaaudio.Mixer()
         self.current_vol = self.mixer.getvolume()[0]
