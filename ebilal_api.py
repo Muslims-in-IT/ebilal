@@ -16,7 +16,7 @@ def read_mounts():
 
 
 @app.post("/mounts/{mount}")
-def write_mounts(mount: str):
+def set_mount(mount: str):
     settings.default.MOUNTS = mount
     write('settings.json', settings.to_dict(), merge=False)
     return {"mounts": settings.default.mounts}
