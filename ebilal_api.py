@@ -45,6 +45,11 @@ def write_item(setting_name: str,setting_value: str):
 def read_root():
     return {"volume": mixer.getvolume()[0]}
 
+@app.post("/volume")
+def volup(vol:int):
+    mixer.setvolume(vol)
+    return {"volume": mixer.getvolume()}
+
 @app.post("/volume/up")
 def volup():
     if (mixer.getvolume()[0] <= 90):
