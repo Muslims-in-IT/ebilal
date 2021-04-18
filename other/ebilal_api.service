@@ -7,7 +7,7 @@ User=pi
 Group=pi
 Type=idle
 WorkingDirectory=/opt/ebilal/
-ExecStart=uvicorn ebilal_api:app --reload
+ExecStart=uvicorn ebilal_api:app --reload  --host 0.0.0.0
 Restart=always
 
 [Install]
