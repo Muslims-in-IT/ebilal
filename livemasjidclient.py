@@ -12,8 +12,7 @@ import os
 import subprocess
 import alsaaudio
 import settings_api
-#import uvicorn
-#from settings_api import app
+
 
 logger = logging.getLogger()
 
@@ -105,7 +104,6 @@ class LivemasjidClient:
 
 def main():
     mounts = ["activestream"]
-    #uvicorn.run(app, host="127.0.0.1", port=5000, log_level="info")
     load_config()
     mounts,server_url = load_config()
     if len(sys.argv) > 1:
