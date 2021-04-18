@@ -23,10 +23,8 @@ class LivemasjidClient:
     """User Object"""
     def __init__(self):
         self.client = mqtt.Client()
-        self.settings = LazySettings(settings_file="config.json")
-        mounts,server_url = self.load_config()
-        self.baseURL =server_url
-        self.mountToPlay = mounts
+        self.settings = LazySettings(settings_file="settings.json")
+        self.mountToPlay,self.baseURL = self.load_config()
         self.livestreams = []
         self.playing = None
         self.mixer = alsaaudio.Mixer()
