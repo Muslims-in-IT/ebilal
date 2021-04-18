@@ -29,10 +29,10 @@ class LivemasjidClient:
         self.mountToPlay = mountToPlay
         self.client = mqtt.Client()
         self.baseURL = config_url
-        self.current_vol = 50
         self.livestreams = []
         self.playing = None
         self.mixer = alsaaudio.Mixer()
+        self.current_vol = self.mixer.getvolume()[0]
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
