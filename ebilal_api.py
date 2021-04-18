@@ -20,8 +20,8 @@ def read_mounts():
 
 @app.post("/mounts/")
 def write_mounts(mounts: List[str]):
-    settings.default.mounts = mounts
-    write('config.json', settings, merge=False)
+    settings.default.MOUNTS = mounts
+    write('config.json', settings.to_dict(), merge=False)
     return {"mounts": settings.default.mounts}
 
 @app.get("/server_url")
