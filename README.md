@@ -18,11 +18,15 @@ This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup
 12. `sudo systemctl daemon-reload`
 13. `sudo systemctl enable ebilal.service`
 14. `sudo systemctl enable ebilal_api.service`
-15. Modify settings.json to set streams to listen to (pick from livemasjid.com using the last word in the stream URL)
+15. Modify settings.toml and update MOUNTS=["activestream"] to set streams to listen to (pick from livemasjid.com using the last word in the stream URL). e.g. MOUNTS=["greensidemasjid"]
 16. `sudo reboot`
 
 To check status:
 `sudo systemctl status ebilal.service`
+
+## Updates
+1. cd /opt/ebilal
+2. git pull
 
 ## API
 Try the new API here:
