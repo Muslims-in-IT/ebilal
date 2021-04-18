@@ -1,5 +1,5 @@
 from dynaconf import LazySettings
-from dynaconf.loaders.json_loader import write
+from dynaconf.loaders.toml_loader import write
 from fastapi import FastAPI
 from typing import List
 import alsaaudio
@@ -17,14 +17,14 @@ def read_mounts():
 
 @app.post("/mounts/{mount}")
 def set_mount(mount: str):
-    settings.default.MOUNTS = mount
+    settings.default.MOUNTS = [mount]
     write('settings.toml', settings.to_dict(), merge=False)
     return {"mounts": settings.default.mounts}
 
 @app.post("/mounts/")
 def write_mounts(mounts: List[str]):
     settings.default.MOUNTS = mounts
-    write('settings.toml', settings.to_dict(), merge=False)
+    write('settings.toml', settings. , merge=False)
     return {"mounts": settings.default.mounts}
 
 @app.get("/server_url")
