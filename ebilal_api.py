@@ -59,6 +59,7 @@ def volup():
         mixer.setvolume(current_vol)
     return {"volume": mixer.getvolume()}
 
+""" 
 @app.get("/settings")
 def read_root():
     return settings.default
@@ -70,4 +71,4 @@ def read_item(setting_name: str):
 @app.put("/settings/{setting_name}")
 def write_item(setting_name: str,setting_value: str):
     write('settings.toml', {"DEFAULT": {setting_name: setting_value}}, merge=True)
-    return {setting_name: settings["default."+setting_name]}
+    return {setting_name: settings["default."+setting_name]} """

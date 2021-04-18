@@ -12,6 +12,7 @@ import os
 import subprocess
 import alsaaudio
 from dynaconf import LazySettings
+import pyinotify
 
 
 logger = logging.getLogger()
@@ -23,17 +24,18 @@ class LivemasjidClient:
     """User Object"""
     def __init__(self):
         self.client = mqtt.Client()
-        self.mountToPlay,self.baseURL = self.load_config()
         self.livestreams = []
+        self.self.mountToPlay = []
         self.playing = None
         self.mixer = alsaaudio.Mixer()
         self.current_vol = self.mixer.getvolume()[0]
+        self.load_config
     
     def load_config(self):
-        settings = LazySettings(settings_file="settings.json")
-        server_url = settings.default.server_url
-        mounts = settings.default.mounts
-        return mounts,server_url
+        logger.debug("reloading config file")
+        settings = LazySettings(settings_file="settings.toml")
+        self.baseURL = settings.default.server_url
+        self.mountToPlay = settings.default.mounts
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
@@ -160,13 +162,17 @@ def main():
         @phatbeat.on(phatbeat.BTN_ONOFF)
         def perform_shutdown(pin):
             os.system("sudo shutdown -h now")
-    
+
     #Main loop
-    while True:
+    wm = pyinotify.WatchManager()
+    wm.add_watch('settings.toml', pyinotify.IN_MODIFY, livemasjid.load_config())
+    notifier = pyinotify.Notifier(wm)
+    notifier.loop()
+    
+"""     while True:
         time.sleep(60)
         logger.debug("reloading config file")
-        mounts,server_url = livemasjid.load_config()
-        livemasjid.set_mounts(mounts)
+        livemasjid.load_config() """
 
 if __name__ == "__main__":
     main()
