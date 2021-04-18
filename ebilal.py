@@ -35,7 +35,9 @@ class LivemasjidClient:
         logger.debug("reloading config file")
         settings = LazySettings(settings_file="settings.toml")
         self.baseURL = settings.default.server_url
+        logger.debug("Server URL: "+ self.baseURL)
         self.mountToPlay = settings.default.mounts
+        logger.debug("Mount to play: "+ self.mountToPlay)
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts

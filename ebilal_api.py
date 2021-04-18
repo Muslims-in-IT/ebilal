@@ -17,13 +17,13 @@ def read_mounts():
 
 @app.post("/mounts/{mount}")
 def set_mount(mount: str):
-    settings.default.MOUNTS = [mount]
+    settings.default.mounts = [mount]
     write('settings.toml', settings.to_dict(), merge=False)
     return {"mounts": settings.default.mounts}
 
 @app.post("/mounts/")
 def write_mounts(mounts: List[str]):
-    settings.default.MOUNTS = mounts
+    settings.default.mounts = mounts
     write('settings.toml', settings.to_dict() , merge=False)
     return {"mounts": settings.default.mounts}
 
@@ -33,7 +33,8 @@ def read_mounts():
 
 @app.post("/server_url/")
 def write_url(url: str):
-    write('settings.toml', {"DEFAULT": {"SERVER_URL": url}}, merge=True)
+    settings.default.server_url = url
+    write('settings.toml', settings.to_dict(), merge=True)
     return {"mounts": settings.default.server_url}
 
 @app.get("/volume")
