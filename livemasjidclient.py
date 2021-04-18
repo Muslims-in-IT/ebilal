@@ -104,13 +104,10 @@ class LivemasjidClient:
         return self.livestreams
 
 def main():
-<<<<<<< HEAD
     mounts = ["activestream"]
     #uvicorn.run(app, host="127.0.0.1", port=5000, log_level="info")
     load_config()
-=======
     mounts,server_url = load_config()
->>>>>>> 6939137ee5dbd6f7bd01fde8d8d1d9c55608c9a1
     if len(sys.argv) > 1:
         mounts = sys.argv[1].split(',')
     logger.info("Starting..")
