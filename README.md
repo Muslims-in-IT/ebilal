@@ -24,6 +24,11 @@ This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup
 To check status:
 `sudo systemctl status ebilal.service`
 
+## API
+Try the new API here:
+http://ebilal.local:8000/docs
+
+
 ## Optional
 
 If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-pi-zero-w-project-kit):
