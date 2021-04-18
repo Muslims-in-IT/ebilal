@@ -1,8 +1,4 @@
 {
-    "DEFAULT": {
-        "SERVER_URL": "http://livemasjid.com:8000/",
-	"MOUNTS":["activestream"]
-    },
     "version": 1,
     "formatters":
     {

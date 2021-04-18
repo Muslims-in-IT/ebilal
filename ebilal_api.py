@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from typing import List
 import alsaaudio
 
-settings = LazySettings(settings_file="config.json")
+settings = LazySettings(settings_file="settings.json")
 
 app = FastAPI()
 mixer = alsaaudio.Mixer()
@@ -21,7 +21,7 @@ def read_mounts():
 @app.post("/mounts/")
 def write_mounts(mounts: List[str]):
     settings.default.MOUNTS = mounts
-    write('config.json', settings.to_dict(), merge=False)
+    write('settings.json', settings.to_dict(), merge=False)
     return {"mounts": settings.default.mounts}
 
 @app.get("/server_url")
@@ -30,7 +30,7 @@ def read_mounts():
 
 @app.post("/server_url/")
 def write_url(url: str):
-    write('config.json', {"DEFAULT": {"SERVER_URL": url}}, merge=True)
+    write('settings.json', {"DEFAULT": {"SERVER_URL": url}}, merge=True)
     return {"mounts": settings.default.server_url}
 
 @app.get("/settings/{setting_name}")
@@ -39,7 +39,7 @@ def read_item(setting_name: str):
 
 @app.put("/settings/{setting_name}")
 def write_item(setting_name: str,setting_value: str):
-    write('config.json', {"DEFAULT": {setting_name: setting_value}}, merge=True)
+    write('settings.json', {"DEFAULT": {setting_name: setting_value}}, merge=True)
     return {setting_name: settings["default."+setting_name]}
 
 @app.get("/volume")

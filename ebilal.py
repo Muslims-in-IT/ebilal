@@ -11,28 +11,31 @@ from importlib import util
 import os
 import subprocess
 import alsaaudio
+from dynaconf import LazySettings
 
 
 logger = logging.getLogger()
-
-def load_config():
-    with open('/opt/ebilal/config.json', 'r') as f:
+with open('/opt/ebilal/logging.json', 'r') as f:
             config = json.load(f)
             logging.config.dictConfig(config)
-            server_url = config['DEFAULT']['SERVER_URL'] 
-            mounts = config['DEFAULT']['MOUNTS']
-    return mounts,server_url
 
 class LivemasjidClient:
     """User Object"""
-    def __init__(self, mountToPlay, config_url):
-        self.mountToPlay = mountToPlay
+    def __init__(self):
         self.client = mqtt.Client()
-        self.baseURL = config_url
+        mounts,server_url = self.load_config()
+        self.baseURL =server_url
+        self.mountToPlay = mounts
         self.livestreams = []
         self.playing = None
         self.mixer = alsaaudio.Mixer()
         self.current_vol = self.mixer.getvolume()[0]
+        self.settings = LazySettings(settings_file="config.json")
+    
+    def load_config(self):
+        server_url = self.settings.default.server_url
+        mounts = self.settings.default.mounts
+        return mounts,server_url
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
@@ -102,15 +105,9 @@ class LivemasjidClient:
         return self.livestreams
 
 def main():
-    mounts = ["activestream"]
-    load_config()
-    mounts,server_url = load_config()
-    if len(sys.argv) > 1:
-        mounts = sys.argv[1].split(',')
     logger.info("Starting..")
-    logger.info("Listeng to "+mounts[0])
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
-    livemasjid = LivemasjidClient(mounts,server_url)
+    livemasjid = LivemasjidClient()
     livemasjid.connect()
 
     #Setup the Pimoroni module if present
@@ -170,7 +167,7 @@ def main():
     while True:
         time.sleep(60)
         logger.debug("reloading config file")
-        load_config()
+        mounts,server_url = livemasjid.load_config()
         livemasjid.set_mounts(mounts)
 
 if __name__ == "__main__":
