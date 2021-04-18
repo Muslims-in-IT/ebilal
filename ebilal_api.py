@@ -24,7 +24,7 @@ def set_mount(mount: str):
 @app.post("/mounts/")
 def write_mounts(mounts: List[str]):
     settings.default.MOUNTS = mounts
-    write('settings.toml', settings. , merge=False)
+    write('settings.toml', settings.to_dict() , merge=False)
     return {"mounts": settings.default.mounts}
 
 @app.get("/server_url")
