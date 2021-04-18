@@ -14,6 +14,13 @@ current_vol = mixer.getvolume()[0]
 def read_mounts():
     return settings.default.mounts
 
+
+@app.post("/mounts/{mount}")
+def write_mounts(mount: str):
+    settings.default.MOUNTS = mount
+    write('settings.json', settings.to_dict(), merge=False)
+    return {"mounts": settings.default.mounts}
+
 @app.post("/mounts/")
 def write_mounts(mounts: List[str]):
     settings.default.MOUNTS = mounts
