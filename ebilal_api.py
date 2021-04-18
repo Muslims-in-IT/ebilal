@@ -10,10 +10,6 @@ app = FastAPI()
 mixer = alsaaudio.Mixer()
 current_vol = mixer.getvolume()[0]
 
-@app.get("/settings")
-def read_root():
-    return settings.default
-
 @app.get("/mounts")
 def read_mounts():
     return settings.default.mounts
@@ -32,15 +28,6 @@ def read_mounts():
 def write_url(url: str):
     write('settings.json', {"DEFAULT": {"SERVER_URL": url}}, merge=True)
     return {"mounts": settings.default.server_url}
-
-@app.get("/settings/{setting_name}")
-def read_item(setting_name: str):
-    return {setting_name: settings["default."+setting_name]}
-
-@app.put("/settings/{setting_name}")
-def write_item(setting_name: str,setting_value: str):
-    write('settings.json', {"DEFAULT": {setting_name: setting_value}}, merge=True)
-    return {setting_name: settings["default."+setting_name]}
 
 @app.get("/volume")
 def read_root():
@@ -64,3 +51,16 @@ def volup():
         current_vol = mixer.getvolume()[0] - 10
         mixer.setvolume(current_vol)
     return {"volume": mixer.getvolume()}
+
+@app.get("/settings")
+def read_root():
+    return settings.default
+
+@app.get("/settings/{setting_name}")
+def read_item(setting_name: str):
+    return {setting_name: settings["default."+setting_name]}
+
+@app.put("/settings/{setting_name}")
+def write_item(setting_name: str,setting_value: str):
+    write('settings.json', {"DEFAULT": {setting_name: setting_value}}, merge=True)
+    return {setting_name: settings["default."+setting_name]}
