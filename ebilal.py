@@ -23,7 +23,6 @@ class LivemasjidClient:
     """User Object"""
     def __init__(self):
         self.client = mqtt.Client()
-        self.settings = LazySettings(settings_file="settings.json")
         self.mountToPlay,self.baseURL = self.load_config()
         self.livestreams = []
         self.playing = None
@@ -31,8 +30,9 @@ class LivemasjidClient:
         self.current_vol = self.mixer.getvolume()[0]
     
     def load_config(self):
-        server_url = self.settings.default.server_url
-        mounts = self.settings.default.mounts
+        settings = LazySettings(settings_file="settings.json")
+        server_url = settings.default.server_url
+        mounts = settings.default.mounts
         return mounts,server_url
     
     def set_mounts(self,mounts):
