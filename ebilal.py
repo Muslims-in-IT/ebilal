@@ -29,19 +29,20 @@ journald_handler.setFormatter(logging.Formatter(
 # add the journald handler to the current logger
 logger.addHandler(journald_handler)
 
-# optionally set the logging level
-logger.setLevel(logging.DEBUG)
-
 class LivemasjidClient:
     """User Object"""
     def __init__(self):
         self.client = mqtt.Client()
         self.livestreams = []
         self.mountToPlay = []
+        self.audio_device = ""
         self.playing = None
-        self.mixer = alsaaudio.Mixer()
-        self.current_vol = self.mixer.getvolume()[0]
         self.load_config()
+        if self.audio_device == "":
+            self.mixer = alsaaudio.Mixer()
+        else:
+            self.mixer = alsaaudio.Mixer(self.audio_device)
+        self.current_vol = self.mixer.getvolume()[0]
     
     def load_config(self):
         logger.debug("reloading config file")
@@ -49,6 +50,11 @@ class LivemasjidClient:
         self.baseURL = settings.default.server_url
         logger.debug("Server URL: "+ self.baseURL)
         self.mountToPlay = settings.default.mounts
+        self.audio_device = settings.default.audio_device
+        if (settings.default.loglevel == "DEBUG"):
+            logger.setLevel(logging.DEBUG)
+        elif (settings.default.loglevel == "INFO"):
+            logger.setLevel(logging.INFO)
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
