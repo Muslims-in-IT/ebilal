@@ -26,14 +26,14 @@ class LivemasjidClient:
         self.client = mqtt.Client()
         self.livestreams = []
         self.mountToPlay = []
+        self.audio_device = ""
         self.playing = None
-        try:
-            self.mixer = alsaaudio.Mixer()
-        except:
-            logger.debug("Default alsa output not there, so trying PCM")
-            self.mixer = alsaaudio.Mixer('PCM')
-        self.current_vol = self.mixer.getvolume()[0]
         self.load_config()
+        if self.audio_device == "":
+            self.mixer = alsaaudio.Mixer()
+        else:
+            self.mixer = alsaaudio.Mixer(self.audio_device)
+        self.current_vol = self.mixer.getvolume()[0]
     
     def load_config(self):
         logger.debug("reloading config file")
@@ -41,6 +41,7 @@ class LivemasjidClient:
         self.baseURL = settings.default.server_url
         logger.debug("Server URL: "+ self.baseURL)
         self.mountToPlay = settings.default.mounts
+        self.audio_device = settings.default.audio_device
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
