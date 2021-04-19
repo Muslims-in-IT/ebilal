@@ -18,8 +18,16 @@ This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup
 12. `sudo systemctl daemon-reload`
 13. `sudo systemctl enable ebilal.service`
 14. `sudo systemctl enable ebilal_api.service`
-15. Modify settings.toml and update MOUNTS=["activestream"] to set streams to listen to (pick from livemasjid.com using the last word in the stream URL). e.g. MOUNTS=["greensidemasjid"]
-16. `sudo reboot`
+
+## Test
+1. `sudo systemctl start ebilal.service`
+2. `sudo systemctl start ebilal_api.service`
+3. Listen for audio, if none, 1. `sudo systemctl status ebilal.service`
+
+## Configure audio device and stream
+1. Modify settings.toml and update MOUNTS=["activestream"] to set streams to listen to (pick from livemasjid.com using the last word in the stream URL). e.g. MOUNTS=["greensidemasjid"]
+2. Audio device audio_device="" can be set to the value of the device name when running `sudo amixer` e.g. PCM or Headphone
+
 
 To check status:
 `sudo systemctl status ebilal.service`
