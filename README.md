@@ -14,7 +14,7 @@ Release notes:
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup [Wifi and SSH](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 3. Boot and SSH
-4. `sudo apt install git python3 python3-pip ffmpeg ssh-client`
+4. `sudo apt install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev`
 5. `cd /opt/`
 6. `sudo git clone https://bitbucket.org/mitpeople/ebilal.git`
 7. `sudo chown -R pi:pi ebilal`
