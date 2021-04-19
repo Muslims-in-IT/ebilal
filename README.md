@@ -30,7 +30,7 @@ To check status:
 
 ## API
 Try the new API here:
-http://ebilal.local:8000/docs
+http://ebilal.local:8000/docs  (if hostname is ebilal)
 
 
 ## Optional

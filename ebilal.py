@@ -27,7 +27,11 @@ class LivemasjidClient:
         self.livestreams = []
         self.mountToPlay = []
         self.playing = None
-        self.mixer = alsaaudio.Mixer()
+        try:
+            self.mixer = alsaaudio.Mixer()
+        except:
+            logger.debug("Default alsa output not there, so trying PCM")
+            self.mixer = alsaaudio.Mixer('PCM')
         self.current_vol = self.mixer.getvolume()[0]
         self.load_config()
     
