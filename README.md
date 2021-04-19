@@ -44,6 +44,7 @@ Release notes:
 2. `git reset --hard origin/master`    (Note: this will override your settings.toml, so make a copy 1st)
 3. `git pull`
 4. `pip3 install -r requirements.txt`
+5. `sudo systemctl restart ebilal.service`
 
 ## API
 Try the new API here:
@@ -55,6 +56,6 @@ http://ebilal.local:8000/docs  (if hostname is ebilal)
 If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-pi-zero-w-project-kit):
 `curl https://get.pimoroni.com/phatbeat | bash`
 
-## Docker
-Experimental: A docker image has been setup, usage:
+## Experimental
+A docker image has been setup, usage:
 docker run mitpeople/ebilal:latest <mountname> --device /dev/snd 
