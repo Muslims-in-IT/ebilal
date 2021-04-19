@@ -35,8 +35,9 @@ Release notes:
 1. Modify settings.toml and update MOUNTS=["activestream"] to set streams to listen to (pick from livemasjid.com using the last word in the stream URL). e.g. MOUNTS=["greensidemasjid"]
 2. Audio device audio_device="" can be set to the value of the device name when running `sudo amixer` Default is "", other options to try: "PCM" or "Master"
 
-To check status:
+### To check status and debug:
 `sudo systemctl status ebilal.service`
+`journalctl -u ebilal.service -f`
 
 ## Updates
 1. `cd /opt/ebilal`
