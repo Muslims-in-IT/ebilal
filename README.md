@@ -2,7 +2,14 @@
 
 This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup, it will play your selected live audio streams from livemasjid.com.
 
-## Roll your own instructions
+##
+Latest revision: 1.0 19th April 2021
+Release notes: 
+* Added release notes
+* Added API
+* Added support for alternative ALSA audio devices in settings (still testing)
+
+## Installation
 
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup [Wifi and SSH](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
@@ -33,8 +40,10 @@ To check status:
 `sudo systemctl status ebilal.service`
 
 ## Updates
-1. cd /opt/ebilal
-2. git pull
+1. `cd /opt/ebilal`
+2. `git reset --hard origin/master`    (Note: this will override your settings.toml, so make a copy 1st)
+3. `git pull`
+4. `pip3 install -r requirements.txt`
 
 ## API
 Try the new API here:
