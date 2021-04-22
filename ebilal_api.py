@@ -7,7 +7,10 @@ import alsaaudio
 settings = LazySettings(settings_file="settings.toml")
 
 app = FastAPI()
-mixer = alsaaudio.Mixer()
+if settings.default.audio_device == "":
+    mixer = alsaaudio.Mixer()
+else:
+    mixer = alsaaudio.Mixer(settings.default.audio_device)
 current_vol = mixer.getvolume()[0]
 
 @app.get("/mounts")

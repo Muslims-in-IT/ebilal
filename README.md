@@ -29,11 +29,11 @@ Release notes:
 ## Test
 1. `sudo systemctl start ebilal.service`
 2. `sudo systemctl start ebilal_api.service`
-3. Listen for audio, if none, 1. `sudo systemctl status ebilal.service`
+3. Listen for audio, if none, `sudo systemctl status ebilal.service`
 
 ## Configure audio device and stream
-1. Modify settings.toml and update MOUNTS=["activestream"] to set streams to listen to (pick from livemasjid.com using the last word in the stream URL). e.g. MOUNTS=["greensidemasjid"]
-2. Audio device audio_device="" can be set to the value of the device name when running `sudo amixer` Default is "", other options to try: "PCM" or "Master"
+1. Modify settings.toml and update `MOUNTS=["activestream"]` to set streams to listen to (pick from livemasjid.com using the last word in the stream URL). e.g. `MOUNTS=["greensidemasjid"]`
+2. Audio device `audio_device=""` can be set to the value of the device name when running `sudo amixer` Default is "", other options to try: "PCM" or "Master"
 
 ### To check status and debug:
 `sudo systemctl status ebilal.service`
