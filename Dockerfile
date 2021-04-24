@@ -8,5 +8,5 @@ RUN apt-get update && \
     apt-get -qy clean all
 RUN pip3 install --upgrade pip
 RUN cd /opt/ && git clone https://yusuf_kaka@bitbucket.org/mitpeople/ebilal.git && cd ebilal && pip3 install -r ./requirements.txt
-ENTRYPOINT ["python3","/opt/ebilal/livemasjidclient.py"]
+ENTRYPOINT ["python3","/opt/ebilal/ebi]al.py"]
 RUN [ "cross-build-end" ]
