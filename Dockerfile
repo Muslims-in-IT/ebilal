@@ -1,4 +1,4 @@
-FROM balenalib/raspberry-pi-debian-python
+FROM balenalib/rpi-raspbian:latest
 RUN [ "cross-build-start" ]
 USER root
 
@@ -16,8 +16,9 @@ RUN apt-get update && \
     apt-get -qy clean all
 
 # Install pip requirements
+RUN pip3 install --upgrade pip
 COPY requirements.txt .
-RUN python3 -m pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 WORKDIR /opt/ebilal
 COPY . /opt/ebilal
