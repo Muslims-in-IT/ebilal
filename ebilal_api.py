@@ -8,7 +8,10 @@ settings = LazySettings(settings_file="settings.toml")
 
 app = FastAPI()
 if settings.default.audio_device == "":
-    mixer = alsaaudio.Mixer()
+    try:
+        mixer = alsaaudio.Mixer()
+    except:
+        mixer = alsaaudio.Mixer(alsaaudio.mixers()[0])
 else:
     mixer = alsaaudio.Mixer(settings.default.audio_device)
 current_vol = mixer.getvolume()[0]
