@@ -10,7 +10,11 @@ Release notes:
 * Added support for alternative ALSA audio devices in settings (still testing)
 
 ## Installation
+### The quick way 
+1. Download setup.sh from the link above
+2. `bash setup.sh`
 
+### The responsible way
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup [Wifi and SSH](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 3. Boot and SSH

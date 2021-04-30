@@ -18,4 +18,4 @@ sudo systemctl enable ebilal.service
 sudo systemctl enable ebilal_api.service
 sudo systemctl start ebilal.service
 sudo systemctl start ebilal_api.service
-printf "[4/4]🎉  Finished! nano /opt/ebilal/settings.toml to configure.\n"
+printf "[4/4]🎉   Finished! nano /opt/ebilal/settings.toml to configure.\n"
