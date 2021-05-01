@@ -2,7 +2,7 @@
 # Exit if any subcommand fails
 set -e
 printf "[1/4]⏳   Installing apt packages"
-sudo apt -y install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev
+sudo apt update && sudo apt -y install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev
 printf "[2/4]⏳   Fetching eBilal code"
 cd /opt/
 sudo git clone https://bitbucket.org/mitpeople/ebilal.git
