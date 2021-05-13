@@ -63,3 +63,6 @@ If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-p
 ## Experimental
 A docker image has been setup, usage:
 docker run mitpeople/ebilal:latest <mountname> --device /dev/snd 
+
+## License
+Licensed under AGPL-3.0-or-later (or AGPL-3.0-only 
