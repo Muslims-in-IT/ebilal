@@ -14,6 +14,7 @@ import alsaaudio
 from dynaconf import LazySettings
 import pyinotify
 from systemd.journal import JournaldLogHandler
+from ebilal_api import LivemasjidClientAPI
 
 # get an instance of the logger object this module will use
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ journald_handler.setFormatter(logging.Formatter(
 logger.addHandler(journald_handler)
 
 class LivemasjidClient:
-    """User Object"""
+    """Livemasjid client Object"""
     def __init__(self):
         self.client = mqtt.Client()
         self.livestreams = []
