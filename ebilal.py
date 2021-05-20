@@ -14,9 +14,6 @@ import alsaaudio
 from dynaconf import LazySettings
 import pyinotify
 from systemd.journal import JournaldLogHandler
-from ebilal_api import LivemasjidClientAPI
-
-# get an instance of the logger object this module will use
 logger = logging.getLogger(__name__)
 
 # instantiate the JournaldLogHandler to hook into systemd
@@ -133,6 +130,8 @@ def main():
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid = LivemasjidClient()
     livemasjid.connect()
+
+    from ebilal_api import LivemasjidClientAPI
     livemasjidapi = LivemasjidClientAPI(livemasjid)
     livemasjidapi.runServer()
 

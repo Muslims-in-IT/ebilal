@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from typing import List
 import alsaaudio
 import uvicorn
+from ebilal import LivemasjidClient
 
 app = FastAPI()
 
@@ -73,8 +74,8 @@ class LivemasjidClientAPI:
             self.mixer.setvolume(current_vol)
         return {"volume": self.mixer.getvolume()}
 
-    def runServer():
-        uvicorn.run("ebilal_api:app",host='0.0.0.0', port=80, reload=True, debug=True, workers=3)
+    def runServer(self):
+        uvicorn.run("ebilal_api:app",host='0.0.0.0', port=8000, reload=True, debug=True, workers=3)
 
 if __name__=="__main__":
-    uvicorn.run("ebilal_api:app",host='0.0.0.0', port=80, reload=True, debug=True, workers=3)
+    uvicorn.run("ebilal_api:app",host='0.0.0.0', port=8000, reload=True, debug=True, workers=3)
