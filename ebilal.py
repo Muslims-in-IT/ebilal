@@ -133,6 +133,8 @@ def main():
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid = LivemasjidClient()
     livemasjid.connect()
+    livemasjidapi = LivemasjidClientAPI(livemasjid)
+    livemasjidapi.runServer()
 
     #Setup the Pimoroni module if present
     phat_spec = util.find_spec("phatbeat")
