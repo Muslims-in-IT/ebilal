@@ -39,7 +39,10 @@ class LivemasjidClient:
         self.playing = None
         self.load_config()
         if self.audio_device == "":
-            self.mixer = alsaaudio.Mixer()
+            try:
+                self.mixer = alsaaudio.Mixer()
+            except:
+                self.mixer = alsaaudio.Mixer(alsaaudio.mixers()[0])
         else:
             self.mixer = alsaaudio.Mixer(self.audio_device)
         self.current_vol = self.mixer.getvolume()[0]
