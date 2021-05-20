@@ -11,6 +11,7 @@ from importlib import util
 import os
 import subprocess
 import alsaaudio
+import threading
 from dynaconf import LazySettings
 import pyinotify
 from systemd.journal import JournaldLogHandler
@@ -133,7 +134,8 @@ def main():
 
     from ebilal_api import LivemasjidClientAPI
     livemasjidapi = LivemasjidClientAPI(livemasjid)
-    livemasjidapi.runServer()
+    thread = threading.Thread(target=livemasjidapi.runServer())
+    thread.start()
 
     #Setup the Pimoroni module if present
     phat_spec = util.find_spec("phatbeat")
