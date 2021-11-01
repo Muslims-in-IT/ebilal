@@ -37,7 +37,7 @@ class LivemasjidClientAPI:
 
     @app.get("/mounts")
     def read_mounts(self):
-        return self.settings.default.mounts
+        return {"mounts": self.settings.default.mounts}
 
 
     @app.post("/mounts/{mount}")
@@ -54,7 +54,7 @@ class LivemasjidClientAPI:
 
     @app.get("/server_url")
     def read_mounts(self):
-        return self.settings.default.server_url
+        return {"server_url": self.settings.default.server_url}
 
     @app.post("/server_url/")
     def write_url(self,url: str):
