@@ -14,8 +14,6 @@ import alsaaudio
 from dynaconf import LazySettings
 import pyinotify
 from systemd.journal import JournaldLogHandler
-
-# get an instance of the logger object this module will use
 logger = logging.getLogger(__name__)
 
 # instantiate the JournaldLogHandler to hook into systemd
@@ -30,7 +28,7 @@ journald_handler.setFormatter(logging.Formatter(
 logger.addHandler(journald_handler)
 
 class LivemasjidClient:
-    """User Object"""
+    """Livemasjid client Object"""
     def __init__(self):
         self.client = mqtt.Client()
         self.livestreams = []
@@ -132,6 +130,10 @@ def main():
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid = LivemasjidClient()
     livemasjid.connect()
+
+    from ebilal_api import LivemasjidClientAPI
+    livemasjidapi = LivemasjidClientAPI(livemasjid)
+    livemasjidapi.runServer()
 
     #Setup the Pimoroni module if present
     phat_spec = util.find_spec("phatbeat")

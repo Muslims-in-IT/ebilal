@@ -24,11 +24,12 @@ Release notes:
 7. `sudo chown -R pi:pi ebilal`
 8. `cd ebilal`
 9. `pip3 install -r requirements.txt`
-10. `sudo cp other/*.service /lib/systemd/system/`
-11. `sudo chmod 644 /lib/systemd/system/ebilal*`
-12. `sudo systemctl daemon-reload`
-13. `sudo systemctl enable ebilal.service`
-14. `sudo systemctl enable ebilal_api.service`
+10. `cp ebilal/settings_example.toml ebilal/settings.toml`
+11. `sudo cp other/*.service /lib/systemd/system/`
+12. `sudo chmod 644 /lib/systemd/system/ebilal*`
+13. `sudo systemctl daemon-reload`
+14. `sudo systemctl enable ebilal.service`
+15. `sudo systemctl enable ebilal_api.service`
 
 ## Test
 1. `sudo systemctl start ebilal.service`
