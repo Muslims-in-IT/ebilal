@@ -1,12 +1,23 @@
 from dynaconf import LazySettings
 from dynaconf.loaders.toml_loader import write
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import alsaaudio
 import uvicorn
 from ebilal import LivemasjidClient
 
 app = FastAPI()
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class LivemasjidClientAPI:
     from ebilal import LivemasjidClient
