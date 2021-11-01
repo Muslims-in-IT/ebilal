@@ -1,1 +1,6 @@
 settings.toml
+__pycache__/
+*.py[cod]
+*$py.class
+.vscode
+.venv
