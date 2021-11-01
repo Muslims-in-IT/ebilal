@@ -23,7 +23,7 @@ class LivemasjidClientAPI:
     from ebilal import LivemasjidClient
     """Livemasjid client Object"""
     def __init__(self, client: LivemasjidClient):
-        self.settings = LazySettings(settings_file="settings.toml")
+        self.settings = LazySettings(settings_file="/opt/ebilal/settings.toml")
         
         if self.settings.default.audio_device == "":
             try:
