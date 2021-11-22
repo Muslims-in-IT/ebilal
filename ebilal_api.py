@@ -7,7 +7,7 @@ import alsaaudio
 import uvicorn
 from ebilal import LivemasjidClient
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 
 origins = ["*"]
 
