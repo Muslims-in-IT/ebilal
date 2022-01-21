@@ -131,9 +131,9 @@ def main():
     livemasjid = LivemasjidClient()
     livemasjid.connect()
 
-    from ebilal_api import LivemasjidClientAPI
-    livemasjidapi = LivemasjidClientAPI(livemasjid)
-    livemasjidapi.runServer()
+    #from ebilal_api import LivemasjidClientAPI
+    #livemasjidapi = LivemasjidClientAPI(livemasjid)
+    #livemasjidapi.runServer()
 
     #Setup the Pimoroni module if present
     phat_spec = util.find_spec("phatbeat")
