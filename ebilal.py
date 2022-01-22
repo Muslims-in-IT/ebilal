@@ -56,6 +56,10 @@ class LivemasjidClient:
             logger.setLevel(logging.DEBUG)
         elif (settings.default.loglevel == "INFO"):
             logger.setLevel(logging.INFO)
+        for mount in self.mountToPlay:
+            if (mount in self.livestreams):
+                self.playmount(mount)
+                break
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
@@ -130,10 +134,6 @@ def main():
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid = LivemasjidClient()
     livemasjid.connect()
-
-    #from ebilal_api import LivemasjidClientAPI
-    #livemasjidapi = LivemasjidClientAPI(livemasjid)
-    #livemasjidapi.runServer()
 
     #Setup the Pimoroni module if present
     phat_spec = util.find_spec("phatbeat")
