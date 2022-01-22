@@ -31,7 +31,6 @@ fetch(casturl)
   { 
     mount_name = livemount.listenurl;
     mount_name = mount_name.split('/')[3];
-    console.log(mount_name);
     boxes += `<div class="box"><div class="media-content"><div class="content"><p>`;
     boxes += "<strong>"+ livemount.server_name + "</strong><br/>";
     boxes += livemount.server_description;
@@ -55,4 +54,45 @@ fetch(casturl)
   document.getElementById('livemounts').innerHTML = boxes;
 })
 .catch((err) => console.log("Can’t access " + casturl + " response. Blocked by browser?" + err));
+
+const TABS = [...document.querySelectorAll('#tabs li')];
+const CONTENT = [...document.querySelectorAll('#tab-content div')];
+const ACTIVE_CLASS = 'is-active';
+const NON_ACTIVE_CLASS = 'is-inactive';
+
+function initTabs() {
+    TABS.forEach((tab) => {
+      tab.addEventListener('click', (e) => {
+        let selected = tab.getAttribute('data-tab');
+        updateActiveTab(tab);
+        updateActiveContent(selected);
+      })
+    })
+}
+
+function updateActiveTab(selected) {
+  TABS.forEach((tab) => {
+    if (tab && tab.classList.contains(ACTIVE_CLASS)) {
+      tab.classList.remove(ACTIVE_CLASS);
+      tab.classList.add(NON_ACTIVE_CLASS);
+    }
+  });
+  selected.classList.add(ACTIVE_CLASS);
+}
+
+function updateActiveContent(selected) {
+  CONTENT.forEach((item) => {
+    if (item && item.classList.contains(ACTIVE_CLASS)) {
+      item.classList.remove(ACTIVE_CLASS);
+      item.classList.add(NON_ACTIVE_CLASS);
+    }
+    let data = item.getAttribute('data-content');
+    if (data === selected) {
+      item.classList.add(ACTIVE_CLASS);
+      item.classList.remove(NON_ACTIVE_CLASS);
+    }
+  });
+}
+
+initTabs();
 
