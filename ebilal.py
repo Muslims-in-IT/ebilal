@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #from gluon import *
+from tkinter import W
 import paho.mqtt.client as mqtt
 import sys
 import time
@@ -56,6 +57,9 @@ class LivemasjidClient:
             logger.setLevel(logging.DEBUG)
         elif (settings.default.loglevel == "INFO"):
             logger.setLevel(logging.INFO)
+            
+        #Stop any playing streams and start any live streams
+        self.stop()
         for mount in self.mountToPlay:
             if (mount in self.livestreams):
                 self.playmount(mount)

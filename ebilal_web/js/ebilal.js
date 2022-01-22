@@ -2,7 +2,7 @@
 // Get the current config from the ebilal API
 
 var subscribed_mounts=[];
-const baseurl = "http://ebilal.local:8000/"; 
+const baseurl = "http://ebilal.local/api/"; 
 
 // Get subscribed mounts
 function getSubscribedMounts(mounts) {
@@ -150,9 +150,15 @@ function removeMount(mount) {
   console.log(newMounts);
 }
 
+//Set volume using form data
+function setTheVolume(form) {
+  console.log(form.volume.value);
+  setVolume(form.volume.value);
+}
+
 // Set the volume using the ebilal API
 function setVolume(volume) {
-  url = baseurl + "volume" + "/" + volume;
+  url = baseurl + "volume" + "/?vol=" + volume;
   fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'application/json' }})
     .then(response => response.text())
   .then(response => {
