@@ -107,6 +107,14 @@ function updateActiveContent(selected) {
   });
 }
 
+//Set mounts using form data
+function setTheMounts(form) {
+  console.log(form.mounts.value);
+  var theMounts = [];
+  theMounts = form.mounts.value.split(',');
+  setMounts(theMounts);
+}
+
 // Set the configured mount using the ebilal API
 function setMounts(mounts) {
   url = baseurl + "mounts";
