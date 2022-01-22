@@ -96,7 +96,7 @@ class LivemasjidClient:
     def playurl(self,url):
         self.stop()
         logger.debug("Starting media player")
-        self.process = subprocess.Popen("ffplay -vn -nostats -autoexit "+ url,shell=False)
+        self.process = subprocess.Popen(["ffplay", "-vn", "-nostats", "-autoexit", url], shell=False)
 
     def stop(self):
         logger.debug("stopping media player")
