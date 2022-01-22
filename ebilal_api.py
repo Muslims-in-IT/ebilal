@@ -41,7 +41,7 @@ def set_mount(mount: str):
     write('settings.toml', settings.to_dict(), merge=False)
     return {"mounts": settings.default.mounts}
 
-@app.post("/mounts/")
+@app.post("/mounts")
 def write_mounts(mounts: List[str]):
     settings.default.mounts = mounts
     write('settings.toml', settings.to_dict() , merge=False)
