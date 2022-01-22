@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 #from gluon import *
-from tkinter import W
 import paho.mqtt.client as mqtt
 import sys
 import time
@@ -63,7 +62,7 @@ class LivemasjidClient:
         for mount in self.mountToPlay:
             if (mount in self.livestreams):
                 self.playmount(mount)
-                break
+                return
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
