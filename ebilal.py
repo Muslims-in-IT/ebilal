@@ -45,7 +45,7 @@ class LivemasjidClient:
             self.mixer = alsaaudio.Mixer(self.audio_device)
         self.current_vol = self.mixer.getvolume()[0]
     
-    def load_config(self):
+    def load_config(self, reload = False):
         logger.debug("reloading config file")
         settings = LazySettings(settings_file="settings.toml")
         self.baseURL = settings.default.server_url
@@ -58,11 +58,12 @@ class LivemasjidClient:
             logger.setLevel(logging.INFO)
             
         #Stop any playing streams and start any live streams
-        self.stop()
-        for mount in self.mountToPlay:
-            if (mount in self.livestreams):
-                self.playmount(mount)
-                return
+        if (reload):
+            self.stop()
+            for mount in self.mountToPlay:
+                if (mount in self.livestreams):
+                    self.playmount(mount)
+                    return
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
@@ -95,7 +96,7 @@ class LivemasjidClient:
     def playurl(self,url):
         self.stop()
         logger.debug("Starting media player")
-        self.process = subprocess.Popen("ffplay -vn -nostats -autoexit "+ url,shell=True)
+        self.process = subprocess.Popen("ffplay -vn -nostats -autoexit "+ url,shell=False)
 
     def stop(self):
         logger.debug("stopping media player")
@@ -193,7 +194,7 @@ def main():
 
     #Main
     wm = pyinotify.WatchManager()
-    wm.add_watch('settings.toml', pyinotify.IN_MODIFY, livemasjid.load_config())
+    wm.add_watch('settings.toml', pyinotify.IN_MODIFY, livemasjid.load_config(reload=True))
     notifier = pyinotify.Notifier(wm)
     notifier.loop()
     
