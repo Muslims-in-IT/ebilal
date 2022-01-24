@@ -172,7 +172,7 @@ function setVolume(volume) {
   .then(response => {
     const obj = JSON.parse(response);
     if (obj.status === "ok") {
-      updateVolume();
+      getVolume();
     } else {  // error
       console.log(obj.error);
     }   // error  
