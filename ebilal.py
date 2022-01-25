@@ -215,7 +215,7 @@ def volup():
         mixer.setvolume(current_vol)
     return {"volume": mixer.getvolume()}
 
-@app.get("/player/play")
+@app.get("/player/play/{mount}")
 def play(mount:str):
     livemasjid.playmount(mount)
     return {"status": "playing"}
