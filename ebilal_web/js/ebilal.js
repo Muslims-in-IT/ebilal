@@ -3,6 +3,7 @@
 
 var favourites=[];
 const baseurl = "http://ebilal.local/api/"; 
+var state;
 
 // Get favourites from the ebilal API
 function getFavourites() {
@@ -13,6 +14,8 @@ function getFavourites() {
     const obj = JSON.parse(response);
     favourites = obj.favourites;
     document.getElementById('favourites').value = favourites;
+    document.getElementById('fav_button_'+mount).classList.remove('far');
+    document.getElementById('fav_button_'+mount).classList.add('fas');
     console.log(favourites);
   })
   .catch((err) => console.log("Can’t access " + url + " response. Blocked by browser?" + err));
@@ -37,7 +40,8 @@ function getPlayerState() {
     .then(response => response.text())  
   .then(response => {
     const obj = JSON.parse(response);
-    document.getElementById('status').value = obj.volume;
+    document.getElementById('status').textContent = obj.status + " " + obj.mount;
+    return obj;
   })
   .catch((err) => console.log("Can’t access " + url + " response. " + err));
 }
@@ -61,12 +65,8 @@ fetch(casturl)
     boxes += `<br>Mount name: `+mount_name;
     boxes += `</p></div><nav class="level is-mobile">
     <div class="level-left">`;
-    if (favourites.includes(mount_name)) {
-      boxes+= `<a class="level-item" aria-label="favorite" onclick="removeFav('`+mount_name+`')"><span class="icon"><i class="fas fa-heart"></i></span>`;
-    } else {
-      boxes+= `<a class="level-item" aria-label="favorite" onclick="addFav('`+mount_name+`')"><span class="icon"><i class="far fa-heart"></i></span>`;
-    }
-    boxes+= `<a class="level-item" aria-label="favorite" onclick="play('`+mount_name+`')"><span class="icon"><i class="fa-solid fa-play"></i></span>`;
+    boxes+= `<a class="level-item" aria-label="favorite" onclick="toggleFav('`+mount_name+`')"><span class="icon"><i id="fav_button_`+mount_name+`" class="far fa-heart"></i></span>`;
+    boxes+= `<a class="level-item" aria-label="favorite" onclick="play('`+mount_name+`')"><span class="icon"><i class="fa fa-play"></i></span>`;
     boxes += `</a>
       <a class="level-item" aria-label="listen" href=https://`+livemount.server_url+`>
       <span class="icon"><i class="fas fa-external-link-alt"></i></span>
@@ -171,9 +171,22 @@ function removeFav(mount) {
   console.log(newFavs);
 }
 
+//Toggle the favourites
+function toggleFav(mount) {
+  if (favourites.includes(mount)) {
+    removeFav(mount);
+    document.getElementById('fav_button_'+mount).classList.remove('fas');
+    document.getElementById('fav_button_'+mount).classList.add('far');
+  } else {
+    addFav(mount);
+    document.getElementById('fav_button_'+mount).classList.remove('far');
+    document.getElementById('fav_button_'+mount).classList.add('fas');
+  }
+}
+
 // Play a mount using the ebilal API
 async function play(mount) {
-  url = baseurl + "player/play";
+  url = baseurl + "player/play/" + mount;
   const response = await fetch(url, {
     method: 'GET',
     headers: {
@@ -216,7 +229,7 @@ async function setVolume(volume) {
 };
 
 function init() {
-  getPlayerState();
+  state = getPlayerState();
   getFavourites();
   getVolume();
   getLiveStreams();
