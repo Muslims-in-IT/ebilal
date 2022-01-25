@@ -1,0 +1,8 @@
+
+  #tab-content div.is-inactive {
+    display: none;
+  }
+  
+  #tab-content div.is-active {
+    display: block;
+  }

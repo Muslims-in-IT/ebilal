@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #from gluon import *
 import paho.mqtt.client as mqtt
-import sys
 import time
 import argparse
 import json
@@ -13,8 +12,13 @@ import subprocess
 import alsaaudio
 import threading
 from dynaconf import LazySettings
+from dynaconf.loaders.toml_loader import write
 import pyinotify
 from systemd.journal import JournaldLogHandler
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List
+import uvicorn
 logger = logging.getLogger(__name__)
 
 # instantiate the JournaldLogHandler to hook into systemd
@@ -28,6 +32,81 @@ journald_handler.setFormatter(logging.Formatter(
 # add the journald handler to the current logger
 logger.addHandler(journald_handler)
 
+#API stuff
+app = FastAPI(root_path="/api")
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+settings = LazySettings(settings_file="/opt/ebilal/settings.toml")
+
+if settings.default.audio_device == "":
+    try:
+        mixer = alsaaudio.Mixer()
+    except:
+        mixer = alsaaudio.Mixer(alsaaudio.mixers()[0])
+else:
+    mixer = alsaaudio.Mixer(settings.default.audio_device)
+current_vol = mixer.getvolume()[0]
+
+@app.get("/mounts")
+def read_mounts():
+    return {"mounts": settings.default.mounts}
+
+
+@app.post("/mounts/{mount}")
+def set_mount(mount: str):
+    settings.default.mounts = [mount]
+    write('settings.toml', settings.to_dict(), merge=False)
+    return {"mounts": settings.default.mounts}
+
+@app.post("/mounts")
+def write_mounts(mounts: List[str]):
+    settings.default.mounts = mounts
+    write('settings.toml', settings.to_dict() , merge=False)
+    return {"mounts": settings.default.mounts}
+
+@app.get("/server_url")
+def read_mounts():
+    return {"server_url": settings.default.server_url}
+
+@app.post("/server_url/")
+def write_url(url: str):
+    settings.default.server_url = url
+    write('settings.toml', settings.to_dict(), merge=True)
+    return {"mounts": settings.default.server_url}
+
+@app.get("/volume")
+def read_root():
+    return {"volume": mixer.getvolume()[0]}
+
+@app.post("/volume")
+def volset(vol:int):
+    mixer.setvolume(vol)
+    return {"volume": mixer.getvolume()}
+
+@app.post("/volume/up")
+def volup():
+    if (mixer.getvolume()[0] <= 90):
+        current_vol = mixer.getvolume()[0] + 10
+        mixer.setvolume(current_vol)
+    return {"volume": mixer.getvolume()}
+
+@app.post("/volume/down")
+def volup():
+    if (mixer.getvolume()[0] >= 10):
+        current_vol = mixer.getvolume()[0] - 10
+        mixer.setvolume(current_vol)
+    return {"volume": mixer.getvolume()}
+
+# LiveMasjid client
 class LivemasjidClient:
     """Livemasjid client Object"""
     def __init__(self):
@@ -46,7 +125,7 @@ class LivemasjidClient:
             self.mixer = alsaaudio.Mixer(self.audio_device)
         self.current_vol = self.mixer.getvolume()[0]
     
-    def load_config(self):
+    def load_config(self, reload = False):
         logger.debug("reloading config file")
         settings = LazySettings(settings_file="settings.toml")
         self.baseURL = settings.default.server_url
@@ -57,6 +136,14 @@ class LivemasjidClient:
             logger.setLevel(logging.DEBUG)
         elif (settings.default.loglevel == "INFO"):
             logger.setLevel(logging.INFO)
+            
+        #Stop any playing streams and start any live streams
+        if (reload):
+            self.stop()
+            for mount in self.mountToPlay:
+                if (mount in self.livestreams):
+                    self.playmount(mount)
+                    return
     
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
@@ -89,7 +176,7 @@ class LivemasjidClient:
     def playurl(self,url):
         self.stop()
         logger.debug("Starting media player")
-        self.process = subprocess.Popen("ffplay -vn -nostats -autoexit "+ url,shell=True)
+        self.process = subprocess.Popen(["ffplay", "-vn", "-nostats", "-autoexit", url], shell=False)
 
     def stop(self):
         logger.debug("stopping media player")
@@ -131,11 +218,6 @@ def main():
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid = LivemasjidClient()
     livemasjid.connect()
-
-    from ebilal_api import LivemasjidClientAPI
-    livemasjidapi = LivemasjidClientAPI(livemasjid)
-    thread = threading.Thread(target=livemasjidapi.runServer())
-    thread.start()
 
     #Setup the Pimoroni module if present
     phat_spec = util.find_spec("phatbeat")
@@ -190,16 +272,14 @@ def main():
         def perform_shutdown(pin):
             os.system("sudo shutdown -h now")
 
-    #Main
+    #Start the API
+    uvicorn.run("ebilal_api:app",host='0.0.0.0', port=8000, reload=True, debug=True, workers=3)
+
+    # Watch for changes in the settings file
     wm = pyinotify.WatchManager()
-    wm.add_watch('settings.toml', pyinotify.IN_MODIFY, livemasjid.load_config())
+    wm.add_watch('settings.toml', pyinotify.IN_MODIFY, livemasjid.load_config(reload=True))
     notifier = pyinotify.Notifier(wm)
     notifier.loop()
-    
-"""     while True:
-        time.sleep(60)
-        logger.debug("reloading config file")
-        livemasjid.load_config() """
 
 if __name__ == "__main__":
     main()

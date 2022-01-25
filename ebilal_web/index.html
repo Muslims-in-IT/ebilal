@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>eBilal</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+</head>
+
+<body>
+  <nav class="navbar" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://livemasjid.com">
+        <img src="https://www.livemasjid.com/images/livemasjid_icon_small.jpg" width="50" height="50">
+      </a>
+
+      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </a>
+    </div>
+
+    <div id="navbarBasicExample" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="/">
+          Home
+        </a>
+
+        <a class="navbar-item" href="/api/docs/">
+          Documentation
+        </a>
+
+        <div class="navbar-end">
+          <div class="navbar-item">
+          </div>
+        </div>
+      </div>
+  </nav>
+
+  <div class="tabs is-centered is-boxed" id="tabs">
+    <ul>
+      <li class="is-active" data-tab="1">
+        <a>
+          <span class="icon is-small"><i class="fa fa-cog"></i></span>
+          <span>Main</span>
+        </a>
+      </li>
+      <li data-tab="2">
+        <a>
+          <span class="icon is-small"><i class="fa fa-music"></i></span>
+          <span>Live</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div id="tab-content">
+    <div class = "is-active" data-content="1">
+      <div class="card">
+        <div class="card-content">
+          <div class="content">
+            Current config on eBilal.
+            <div class="columns">
+              <div class="column">
+                <form class="box">
+                  <div class="field">
+                    <label class="label">Mounts</label>
+                    <div class="control">
+                      <input class="input" id="mounts" placeholder="e.g. activestream">
+                    </div>
+                  </div>
+                  <button class="button is-primary"onclick="setTheMounts(this.form)">Update</button>
+                </form>
+              </div>
+              <div class="column">
+                <form class="box">
+                  <div class="field">
+                    <label class="label">Volume</label>
+                    <div class="control">
+                      <input class="input" id="volume">
+                    </div>
+                  </div>
+                  <button class="button is-primary" onclick="setTheVolume(this.form)">Update</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="card-footer">
+          <a class="card-footer-item" onclick="init()">Refresh</a>
+        </footer>
+      </div>
+    </div>
+    <div class="is-inactive" data-content="2">
+      <div class="card">
+        <div class="card-content">
+          <div class="content">
+            Live streams
+            <div class="columns">
+              <div class="column" id="livemounts">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/ebilal.js"></script>
+</body>

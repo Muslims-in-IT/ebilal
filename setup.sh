@@ -10,6 +10,7 @@ printf "[3/4]⏳   Fetching Python dependencies"
 sudo chown -R pi:pi ebilal
 cd ebilal
 pip3 install -r requirements.txt
+cp ebilal/settings_example.toml ebilal/settings.toml
 printf "[4/4]⏳   Setting up eBilal as a service"
 sudo cp other/*.service /lib/systemd/system/
 sudo chmod 644 /lib/systemd/system/ebilal*
