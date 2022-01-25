@@ -160,7 +160,7 @@ function removeFav(mount) {
 }
 
 // Play a mount using the ebilal API
-function play(mount) {
+async function play(mount) {
   url = baseurl + "play";
   const response = await fetch(url, {
     method: 'GET',
@@ -169,7 +169,7 @@ function play(mount) {
     }
   });
   const playerJson = await response.json(); //extract JSON from the http response
-  document.getElementById('status').value = playerJson.status;
+  document.getElementById('status').textContent = playerJson.status;
 };
 
 //Set volume using form data
