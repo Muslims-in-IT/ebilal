@@ -38,6 +38,7 @@ class LivemasjidClient:
     def __init__(self):
         self.client = mqtt.Client()
         self.livestreams = []
+        self.mounts = {}
         self.mountToPlay = []
         self.audio_device = ""
         self.playing = None
@@ -86,6 +87,7 @@ class LivemasjidClient:
     def on_message(self,client, userdata, msg):
         logger.debug(msg.topic+" "+str(msg.payload))
         message = msg.topic.split('/')
+        self.mounts[message[1]] = msg.payload.decode()
         if (message[1] in self.mountToPlay):
             if ("started" in msg.payload.decode()):
                 self.playmount(message[1])
@@ -138,6 +140,9 @@ class LivemasjidClient:
 
     def getlivestreams(self):
         return self.livestreams
+    
+    def getmounts(self):
+        return self.mounts
 
 livemasjid = LivemasjidClient()
 
@@ -166,21 +171,15 @@ else:
     mixer = alsaaudio.Mixer(settings.default.audio_device)
 current_vol = mixer.getvolume()[0]
 
-@app.get("/mounts")
+@app.get("/favourites")
 def read_mounts():
-    return {"mounts": settings.default.mounts}
+    return {"favourites": settings.default.mounts}
 
-@app.post("/mounts/{mount}")
-def set_mount(mount: str):
-    settings.default.mounts = [mount]
-    write('settings.toml', settings.to_dict(), merge=False)
-    return {"mounts": settings.default.mounts}
-
-@app.post("/mounts")
-def write_mounts(mounts: List[str]):
-    settings.default.mounts = mounts
+@app.post("/favourites")
+def write_mounts(favourites: List[str]):
+    settings.default.mounts = favourites
     write('settings.toml', settings.to_dict() , merge=False)
-    return {"mounts": settings.default.mounts}
+    return {"favourites": settings.default.mounts}
 
 @app.get("/server_url")
 def read_mounts():
@@ -190,7 +189,7 @@ def read_mounts():
 def write_url(url: str):
     settings.default.server_url = url
     write('settings.toml', settings.to_dict(), merge=True)
-    return {"mounts": settings.default.server_url}
+    return {"server_url": settings.default.server_url}
 
 @app.get("/volume")
 def read_root():
@@ -219,6 +218,15 @@ def volup():
 def play(mount:str):
     livemasjid.playmount(mount)
     return {"status": "playing"}
+
+@app.get("/player/stop")
+def play():
+    livemasjid.stop()
+    return {"status": "stopped"}
+
+@app.get("/mounts")
+def play():
+    return {"mounts": livemasjid.getmounts()}
 
 def main():
     logger.info("Starting..")
