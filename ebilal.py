@@ -279,7 +279,7 @@ def main():
             os.system("sudo shutdown -h now")
 
     #Start the API
-    uvicorn.run("ebilal_api:app",host='0.0.0.0', port=8000, reload=True, debug=True, workers=3)
+    uvicorn.run("ebilal:app",host='0.0.0.0', port=8000, reload=True, debug=True, workers=3)
 
     # Watch for changes in the settings file
     wm = pyinotify.WatchManager()
