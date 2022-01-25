@@ -120,7 +120,7 @@ function setMounts(mounts) {
   url = baseurl + "mounts";
   let mountObject = {mounts: mounts};
   console.log(mountObject);
-  fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'application/json' },   body: JSON.stringify(mounts) })
+  fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'text/plain' },   body: JSON.stringify(mounts) })
     .then(response => response.text())
   .then(response => {
     const obj = JSON.parse(response);
@@ -160,25 +160,21 @@ function removeMount(mount) {
 
 //Set volume using form data
 function setTheVolume(form) {
-  console.log(form.volume.value);
   setVolume(form.volume.value);
 }
 
 // Set the volume using the ebilal API
-function setVolume(volume) {
-  url = baseurl + "volume" + "/?vol=" + volume;
-  fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'application/json' }})
-    .then(response => response.text())
-  .then(response => {
-    const obj = JSON.parse(response);
-    if (obj.status === "ok") {
-      getVolume();
-    } else {  // error
-      console.log(obj.error);
-    }   // error  
-  })
-  .catch((err) => console.log("Can’t access " + url + " response. Blocked by browser?" + err));
-}
+async function setVolume(volume) {
+  url = baseurl + "volume" + "?vol=" + volume;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+  const volJson = await response.json(); //extract JSON from the http response
+  document.getElementById('volume').value = volJson.volume;
+};
 
 function init() {
   getSubscribedMounts();
