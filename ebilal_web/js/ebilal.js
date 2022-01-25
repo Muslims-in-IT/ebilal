@@ -54,7 +54,7 @@ fetch(casturl)
     } else {
       boxes+= `<a class="level-item" aria-label="favorite" onclick="addFav('`+mount_name+`')"><span class="icon"><i class="far fa-heart"></i></span>`;
     }
-    boxes+= `<a class="level-item" aria-label="favorite" onclick="play('`+mount_name+`')"><span class="icon"><i class="far fa-play"></i></span>`;
+    boxes+= `<a class="level-item" aria-label="favorite" onclick="play('`+mount_name+`')"><span class="icon"><i class="fa-solid fa-play"></i></span>`;
     boxes += `</a>
       <a class="level-item" aria-label="listen" href=https://`+livemount.server_url+`>
       <span class="icon"><i class="fas fa-external-link-alt"></i></span>
@@ -161,7 +161,20 @@ function removeFav(mount) {
 
 // Play a mount using the ebilal API
 async function play(mount) {
-  url = baseurl + "play";
+  url = baseurl + "player/play";
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+  const playerJson = await response.json(); //extract JSON from the http response
+  document.getElementById('status').textContent = playerJson.status;
+};
+
+// Stop play using the ebilal API
+async function stop() {
+  url = baseurl + "player/stop";
   const response = await fetch(url, {
     method: 'GET',
     headers: {
