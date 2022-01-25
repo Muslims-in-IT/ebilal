@@ -54,6 +54,7 @@ fetch(casturl)
     } else {
       boxes+= `<a class="level-item" aria-label="favorite" onclick="addFav('`+mount_name+`')"><span class="icon"><i class="far fa-heart"></i></span>`;
     }
+    boxes+= `<a class="level-item" aria-label="favorite" onclick="play('`+mount_name+`')"><span class="icon"><i class="far fa-play"></i></span>`;
     boxes += `</a>
       <a class="level-item" aria-label="listen" href=https://`+livemount.server_url+`>
       <span class="icon"><i class="fas fa-external-link-alt"></i></span>
@@ -116,11 +117,11 @@ function setTheFavs(form) {
 }
 
 // Set the configured mount using the ebilal API
-function setFavourites(mounts) {
-  url = baseurl + "mounts";
-  let mountObject = {mounts: mounts};
-  console.log(mountObject);
-  fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'text/plain' },   body: JSON.stringify(mounts) })
+function setFavourites(favourites) {
+  url = baseurl + "favourites";
+  let favObject = {favourites: favourites};
+  console.log(favObject);
+  fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'text/plain' },   body: JSON.stringify(favourites) })
     .then(response => response.text())
   .then(response => {
     const obj = JSON.parse(response);
@@ -157,6 +158,19 @@ function removeFav(mount) {
   setFavourites(newFavs);
   console.log(newFavs);
 }
+
+// Play a mount using the ebilal API
+function play(mount) {
+  url = baseurl + "play";
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+  const playerJson = await response.json(); //extract JSON from the http response
+  document.getElementById('status').value = playerJson.status;
+};
 
 //Set volume using form data
 function setTheVolume(form) {
