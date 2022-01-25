@@ -107,7 +107,7 @@ class LivemasjidClient:
         self.stop()
         logger.debug("Starting media player")
         self.process = subprocess.Popen(["ffplay", "-vn", "-nostats", "-autoexit", url], shell=False)
-        self.state = "playing"
+        self.state = "playing " + livemasjid.getplaying()
 
     def stop(self):
         logger.debug("stopping media player")
@@ -150,6 +150,9 @@ class LivemasjidClient:
 
     def getstate(self):
         return self.state
+
+    def getplaying(self):
+        return self.playing
 
 livemasjid = LivemasjidClient()
 
@@ -231,7 +234,7 @@ def stop():
     livemasjid.stop()
     return {"status": "stopped"}
 
-@app.get("/player/state")
+@app.get("/player")
 def state():
     return {"status": livemasjid.getstate()}
 

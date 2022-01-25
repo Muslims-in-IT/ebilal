@@ -30,6 +30,18 @@ function getVolume() {
   .catch((err) => console.log("Can’t access " + url + " response. Blocked by browser?" + err));
 }
 
+// Get the player state
+function getPlayerState() {
+  url = baseurl + "player";
+  fetch(url) 
+    .then(response => response.text())  
+  .then(response => {
+    const obj = JSON.parse(response);
+    document.getElementById('status').value = obj.volume;
+  })
+  .catch((err) => console.log("Can’t access " + url + " response. " + err));
+}
+
 // Get the current live streams from the ebilal API
 function getLiveStreams() {
 const casturl = "https://www.livemasjid.com/api/status-json.xsl";
@@ -204,6 +216,7 @@ async function setVolume(volume) {
 };
 
 function init() {
+  getPlayerState();
   getFavourites();
   getVolume();
   getLiveStreams();
