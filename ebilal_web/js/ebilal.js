@@ -110,9 +110,9 @@ function updateActiveContent(selected) {
 
 //Set mounts using form data
 function setTheFavs(form) {
-  console.log(form.mounts.value);
+  console.log(form.favourites.value);
   var theFavs = [];
-  theFavs = form.mounts.value.split(',');
+  theFavs = form.favourites.value.split(',');
   setFavourites(theFavs);
 }
 
