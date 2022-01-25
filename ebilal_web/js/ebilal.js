@@ -4,15 +4,15 @@
 var favourites=[];
 const baseurl = "http://ebilal.local/api/"; 
 
-// Get subscribed mounts
+// Get favourites from the ebilal API
 function getFavourites() {
   var url = baseurl + "favourites";
   fetch(url) 
     .then(response => response.text())  
   .then(response => {
     const obj = JSON.parse(response);
-    favourites = obj.mounts;
-    document.getElementById('mounts').value = favourites;
+    favourites = obj.favourites;
+    document.getElementById('favourites').value = favourites;
     console.log(favourites);
   })
   .catch((err) => console.log("Can’t access " + url + " response. Blocked by browser?" + err));
@@ -64,7 +64,7 @@ fetch(casturl)
   });
   document.getElementById('livemounts').innerHTML = boxes;
 })
-.catch((err) => console.log("Can’t access " + casturl + " response. Blocked by browser?" + err));
+.catch((err) => console.log("Can’t access " + casturl + " response." + err));
 }
 
 // Setup tabs on page load

@@ -39,6 +39,7 @@ class LivemasjidClient:
         self.client = mqtt.Client()
         self.livestreams = []
         self.mounts = {}
+        self.state = "starting"
         self.mountToPlay = []
         self.audio_device = ""
         self.playing = None
@@ -105,10 +106,12 @@ class LivemasjidClient:
         self.stop()
         logger.debug("Starting media player")
         self.process = subprocess.Popen(["ffplay", "-vn", "-nostats", "-autoexit", url], shell=False)
+        self.state = "playing"
 
     def stop(self):
         logger.debug("stopping media player")
         if hasattr(self, 'process'): self.process.kill()
+        self.state = "stopped"
 
     def tunein(self,mount,start=False):
         self.mountToPlay=mount
@@ -143,6 +146,9 @@ class LivemasjidClient:
     
     def getmounts(self):
         return self.mounts
+
+    def getstate(self):
+        return self.state
 
 livemasjid = LivemasjidClient()
 
@@ -220,9 +226,13 @@ def play(mount:str):
     return {"status": "playing"}
 
 @app.get("/player/stop")
-def play():
+def stop():
     livemasjid.stop()
     return {"status": "stopped"}
+
+@app.get("/player/state")
+def state():
+    return {"status": livemasjid.getstate()}
 
 @app.get("/mounts")
 def play():
