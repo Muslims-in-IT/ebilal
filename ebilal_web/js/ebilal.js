@@ -3,6 +3,8 @@
 
 var favourites=[];
 const baseurl = "http://ebilal.local/api/"; 
+var state;
+var livemounts;
 
 // Get favourites from the ebilal API
 function getFavourites() {
@@ -13,9 +15,13 @@ function getFavourites() {
     const obj = JSON.parse(response);
     favourites = obj.favourites;
     document.getElementById('favourites').value = favourites;
+    for (var i = 0; i < favourites.length; i++) {
+      document.getElementById('fav_button_'+favourites[i]).classList.remove('far');
+      document.getElementById('fav_button_'+favourites[i]).classList.add('fas');
+    }
     console.log(favourites);
   })
-  .catch((err) => console.log("Can’t access " + url + " response. Blocked by browser?" + err));
+  .catch((err) => console.log("Can’t access " + url + " response." + err));
 }
 
 //Get volume settings
@@ -30,42 +36,60 @@ function getVolume() {
   .catch((err) => console.log("Can’t access " + url + " response. Blocked by browser?" + err));
 }
 
+// Get the player state
+function getPlayerState() {
+  url = baseurl + "player";
+  fetch(url) 
+    .then(response => response.text())  
+  .then(response => {
+    const obj = JSON.parse(response);
+    if (obj.state == "playing") {
+    document.getElementById('status').textContent = obj.status + " " + obj.mount;
+    } else {
+      document.getElementById('status').textContent = obj.status;
+    }
+    if (obj.status === "playing") {
+      document.getElementById('play_button_'+obj.mount).classList.remove('fa-play');
+      document.getElementById('play_button_'+obj.mount).classList.add('fa-stop');
+    }
+    state = obj;
+  })
+  .catch((err) => console.log("Can’t access " + url + " response. " + err));
+}
+
 // Get the current live streams from the ebilal API
 function getLiveStreams() {
 const casturl = "https://www.livemasjid.com/api/status-json.xsl";
 fetch(casturl) 
   .then(response => response.text())  
-.then(response => {
-  const obj = JSON.parse(response);
-  livemounts = obj.icestats.source;
-  var boxes = "";
-  livemounts.forEach((livemount, i) => 
-  { 
-    mount_name = livemount.listenurl;
-    mount_name = mount_name.split('/')[3];
-    boxes += `<div class="box"><div class="media-content"><div class="content"><p>`;
-    boxes += "<strong>"+ livemount.server_name + "</strong><br/>";
-    boxes += livemount.server_description;
-    boxes += `<br>Mount name: `+mount_name;
-    boxes += `</p></div><nav class="level is-mobile">
-    <div class="level-left">`;
-    if (favourites.includes(mount_name)) {
-      boxes+= `<a class="level-item" aria-label="favorite" onclick="removeFav('`+mount_name+`')"><span class="icon"><i class="fas fa-heart"></i></span>`;
-    } else {
-      boxes+= `<a class="level-item" aria-label="favorite" onclick="addFav('`+mount_name+`')"><span class="icon"><i class="far fa-heart"></i></span>`;
-    }
-    boxes+= `<a class="level-item" aria-label="favorite" onclick="play('`+mount_name+`')"><span class="icon"><i class="fa-solid fa-play"></i></span>`;
-    boxes += `</a>
-      <a class="level-item" aria-label="listen" href=https://`+livemount.server_url+`>
-      <span class="icon"><i class="fas fa-external-link-alt"></i></span>
-      </a>
-    </div>
-    </nav>`;
-    boxes += "</div></div>";
-  });
-  document.getElementById('livemounts').innerHTML = boxes;
-})
-.catch((err) => console.log("Can’t access " + casturl + " response." + err));
+  .then(response => {
+    const obj = JSON.parse(response);
+    livemounts = obj.icestats.source;
+    var boxes = "";
+    livemounts.forEach((livemount, i) => 
+    { 
+      mount_name = livemount.listenurl;
+      mount_name = mount_name.split('/')[3];
+      boxes += `<div class="box"><div class="media-content"><div class="content"><p>`;
+      boxes += "<strong>"+ livemount.server_name + "</strong><br/>";
+      boxes += livemount.server_description;
+      boxes += `<br>Mount name: `+mount_name;
+      boxes += `</p></div><nav class="level is-mobile">
+      <div class="level-left">`;
+      boxes+= `<a class="level-item" aria-label="favorite" onclick="toggleFav('`+mount_name+`')"><span class="icon"><i id="fav_button_`+mount_name+`" class="far fa-heart"></i></span>`;
+      boxes+= `<a class="level-item" aria-label="favorite" onclick="togglePlay('`+mount_name+`')"><span class="icon"><i id="play_button_`+mount_name+`" class="fa fa-play"></i></span>`;
+      boxes += `</a>
+        <a class="level-item" aria-label="listen" href=https://`+livemount.server_url+`>
+        <span class="icon"><i class="fas fa-external-link-alt"></i></span>
+        </a>
+      </div>
+      </nav>`;
+      boxes += "</div></div>";
+    });
+    document.getElementById('livemounts').innerHTML = boxes;
+    return livemounts;
+  })
+  .catch((err) => console.log("Can’t access " + casturl + " response." + err));
 }
 
 // Setup tabs on page load
@@ -159,9 +183,37 @@ function removeFav(mount) {
   console.log(newFavs);
 }
 
+//Toggle the favourites
+function toggleFav(mount) {
+  if (favourites.includes(mount)) {
+    removeFav(mount);
+    document.getElementById('fav_button_'+mount).classList.remove('fas');
+    document.getElementById('fav_button_'+mount).classList.add('far');
+  } else {
+    addFav(mount);
+    document.getElementById('fav_button_'+mount).classList.remove('far');
+    document.getElementById('fav_button_'+mount).classList.add('fas');
+  }
+}
+
+//Toggle play
+function togglePlay(mount) {
+  if (state.status === "playing") {
+    if (state.mount.includes(mount)) {
+      stop();
+      document.getElementById('play_button_'+mount).classList.remove('fa-play');
+      document.getElementById('play_button_'+mount).classList.add('fa-stop');
+    }
+  } else {
+    play(mount);
+    document.getElementById('play_button_'+mount).classList.remove('fa-stop');
+    document.getElementById('play_button_'+mount).classList.add('fa-play');
+  }
+}
+
 // Play a mount using the ebilal API
 async function play(mount) {
-  url = baseurl + "player/play";
+  url = baseurl + "player/play/" + mount;
   const response = await fetch(url, {
     method: 'GET',
     headers: {
@@ -204,9 +256,10 @@ async function setVolume(volume) {
 };
 
 function init() {
+  getLiveStreams();
   getFavourites();
   getVolume();
-  getLiveStreams();
+  getPlayerState();
   initTabs();
 }
 

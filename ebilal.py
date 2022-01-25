@@ -39,10 +39,10 @@ class LivemasjidClient:
         self.client = mqtt.Client()
         self.livestreams = []
         self.mounts = {}
-        self.state = "starting"
+        self.state = {"status":"starting"}
         self.mountToPlay = []
         self.audio_device = ""
-        self.playing = None
+        self.playing = ""
         self.load_config()
         if self.audio_device == "":
             try:
@@ -83,7 +83,7 @@ class LivemasjidClient:
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
         client.subscribe("mounts/#")
-        self.state = "connected"
+        self.state["status"] = "connected"
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self,client, userdata, msg):
@@ -100,19 +100,21 @@ class LivemasjidClient:
 
     def playmount(self,mount):
         logger.debug("Playing mount "+mount)
-        self.playurl(self.baseURL+mount)
         self.playing = mount
+        self.playurl(self.baseURL+mount)
 
     def playurl(self,url):
         self.stop()
         logger.debug("Starting media player")
         self.process = subprocess.Popen(["ffplay", "-vn", "-nostats", "-autoexit", url], shell=False)
-        self.state = "playing"
+        self.state["status"] = "playing "
+        self.state["mount"] = livemasjid.getplaying()
 
     def stop(self):
         logger.debug("stopping media player")
         if hasattr(self, 'process'): self.process.kill()
-        self.state = "stopped"
+        self.state["status"] = "stopped"
+        self.state["mount"] = ""
 
     def tunein(self,mount,start=False):
         self.mountToPlay=mount
@@ -150,6 +152,9 @@ class LivemasjidClient:
 
     def getstate(self):
         return self.state
+
+    def getplaying(self):
+        return self.playing
 
 livemasjid = LivemasjidClient()
 
@@ -224,14 +229,14 @@ def volup():
 @app.get("/player/play/{mount}")
 def play(mount:str):
     livemasjid.playmount(mount)
-    return {"status": "playing"}
+    return {"status": "playing " + livemasjid.getplaying()}
 
 @app.get("/player/stop")
 def stop():
     livemasjid.stop()
     return {"status": "stopped"}
 
-@app.get("/player/state")
+@app.get("/player")
 def state():
     return {"status": livemasjid.getstate()}
 
