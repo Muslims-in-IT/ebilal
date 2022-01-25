@@ -1,19 +1,19 @@
 /* main app that calls ebilal api */
 // Get the current config from the ebilal API
 
-var subscribed_mounts=[];
+var favourites=[];
 const baseurl = "http://ebilal.local/api/"; 
 
-// Get subscribed mounts
-function getSubscribedMounts(mounts) {
-  var url = baseurl + "mounts";
+// Get favourites from the ebilal API
+function getFavourites() {
+  var url = baseurl + "favourites";
   fetch(url) 
     .then(response => response.text())  
   .then(response => {
     const obj = JSON.parse(response);
-    subscribed_mounts = obj.mounts;
-    document.getElementById('mounts').value = subscribed_mounts;
-    console.log(subscribed_mounts);
+    favourites = obj.favourites;
+    document.getElementById('favourites').value = favourites;
+    console.log(favourites);
   })
   .catch((err) => console.log("Can’t access " + url + " response. Blocked by browser?" + err));
 }
@@ -49,11 +49,12 @@ fetch(casturl)
     boxes += `<br>Mount name: `+mount_name;
     boxes += `</p></div><nav class="level is-mobile">
     <div class="level-left">`;
-    if (subscribed_mounts.includes(mount_name)) {
-      boxes+= `<a class="level-item" aria-label="favorite" onclick="removeMount('`+mount_name+`')"><span class="icon"><i class="fas fa-heart"></i></span>`;
+    if (favourites.includes(mount_name)) {
+      boxes+= `<a class="level-item" aria-label="favorite" onclick="removeFav('`+mount_name+`')"><span class="icon"><i class="fas fa-heart"></i></span>`;
     } else {
-      boxes+= `<a class="level-item" aria-label="favorite" onclick="addMount('`+mount_name+`')"><span class="icon"><i class="far fa-heart"></i></span>`;
+      boxes+= `<a class="level-item" aria-label="favorite" onclick="addFav('`+mount_name+`')"><span class="icon"><i class="far fa-heart"></i></span>`;
     }
+    boxes+= `<a class="level-item" aria-label="favorite" onclick="play('`+mount_name+`')"><span class="icon"><i class="fa-solid fa-play"></i></span>`;
     boxes += `</a>
       <a class="level-item" aria-label="listen" href=https://`+livemount.server_url+`>
       <span class="icon"><i class="fas fa-external-link-alt"></i></span>
@@ -64,7 +65,7 @@ fetch(casturl)
   });
   document.getElementById('livemounts').innerHTML = boxes;
 })
-.catch((err) => console.log("Can’t access " + casturl + " response. Blocked by browser?" + err));
+.catch((err) => console.log("Can’t access " + casturl + " response." + err));
 }
 
 // Setup tabs on page load
@@ -108,24 +109,24 @@ function updateActiveContent(selected) {
 }
 
 //Set mounts using form data
-function setTheMounts(form) {
+function setTheFavs(form) {
   console.log(form.mounts.value);
-  var theMounts = [];
-  theMounts = form.mounts.value.split(',');
-  setMounts(theMounts);
+  var theFavs = [];
+  theFavs = form.mounts.value.split(',');
+  setFavourites(theFavs);
 }
 
 // Set the configured mount using the ebilal API
-function setMounts(mounts) {
-  url = baseurl + "mounts";
-  let mountObject = {mounts: mounts};
-  console.log(mountObject);
-  fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'text/plain' },   body: JSON.stringify(mounts) })
+function setFavourites(favourites) {
+  url = baseurl + "favourites";
+  let favObject = {favourites: favourites};
+  console.log(favObject);
+  fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'text/plain' },   body: JSON.stringify(favourites) })
     .then(response => response.text())
   .then(response => {
     const obj = JSON.parse(response);
     if (obj.status === "ok") {
-      getSubscribedMounts();
+      getFavourites();
     } else {  // error
       console.log(obj.error);
     }   // error  
@@ -134,13 +135,13 @@ function setMounts(mounts) {
 }
 
 // Add a mount to the subscribed mounts
-function addMount(mount) {
-  var newMounts = subscribed_mounts;
-  if (!(subscribed_mounts.includes(mount))){
-    newMounts.push(mount);
-    setMounts(newMounts);
+function addFav(mount) {
+  var newFavs = favourites;
+  if (!(favourites.includes(mount))){
+    newFavs.push(mount);
+    setFavourites(newFavs);
   }
-  console.log(newMounts);
+  console.log(newFavs);
 }
 
 // Remove an item from an array
@@ -152,11 +153,37 @@ function arrayRemove(arr, value) {
 }
 
 // Remove a mount from the subscribed mounts
-function removeMount(mount) {
-  var newMounts = arrayRemove(subscribed_mounts, mount);
-  setMounts(newMounts);
-  console.log(newMounts);
+function removeFav(mount) {
+  var newFavs = arrayRemove(favourites, mount);
+  setFavourites(newFavs);
+  console.log(newFavs);
 }
+
+// Play a mount using the ebilal API
+async function play(mount) {
+  url = baseurl + "player/play";
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+  const playerJson = await response.json(); //extract JSON from the http response
+  document.getElementById('status').textContent = playerJson.status;
+};
+
+// Stop play using the ebilal API
+async function stop() {
+  url = baseurl + "player/stop";
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  });
+  const playerJson = await response.json(); //extract JSON from the http response
+  document.getElementById('status').textContent = playerJson.status;
+};
 
 //Set volume using form data
 function setTheVolume(form) {
@@ -177,7 +204,7 @@ async function setVolume(volume) {
 };
 
 function init() {
-  getSubscribedMounts();
+  getFavourites();
   getVolume();
   getLiveStreams();
   initTabs();
