@@ -46,34 +46,21 @@
     <ul>
       <li class="is-active" data-tab="1">
         <a>
-          <span class="icon is-small"><i class="fa fa-music"></i></span>
-          <span>Live</span>
+          <span class="icon is-small"><i class="fa fa-cog"></i></span>
+          <span>Main</span>
         </a>
       </li>
       <li data-tab="2">
         <a>
-          <span class="icon is-small"><i class="fa fa-cog"></i></span>
-          <span>Settings</span>
+          <span class="icon is-small"><i class="fa fa-music"></i></span>
+          <span>Live</span>
         </a>
       </li>
     </ul>
   </div>
 
   <div id="tab-content">
-    <div class="is-active" data-content="1">
-      <div class="card">
-        <div class="card-content">
-          <div class="content">
-            Live streams
-            <div class="columns">
-              <div class="column" id="livemounts">
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class = "is-inactive" data-content="2">
+    <div class = "is-active" data-content="1">
       <div class="card">
         <div class="card-content">
           <div class="content">
@@ -98,18 +85,6 @@
                       <input class="input" id="volume">
                     </div>
                   </div>
-                  <!--<nav class="level is-mobile">
-                    <div class="level-left">
-                      <a class="level-item" aria-label="volume-down">
-                        <span class="icon"><i class="fas fa-volume-down"></i></span>
-                      </a>
-                    </div>
-                    <div class="level-left">
-                      <a class="level-item" aria-label="volume-up">
-                        <span class="icon"><i class="fas fa-volume-up"></i></span>
-                      </a>
-                    </div>
-                  </nav>-->
                   <button class="button is-primary" onclick="setTheVolume(this.form)">Update</button>
                 </form>
               </div>
@@ -119,6 +94,19 @@
         <footer class="card-footer">
           <a class="card-footer-item" onclick="init()">Refresh</a>
         </footer>
+      </div>
+    </div>
+    <div class="is-inactive" data-content="2">
+      <div class="card">
+        <div class="card-content">
+          <div class="content">
+            Live streams
+            <div class="columns">
+              <div class="column" id="livemounts">
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
