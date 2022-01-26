@@ -288,5 +288,6 @@ setInterval(function(){
   getLog();
   getPlayerState();
   getLiveStreams();
+  getFavourites();
   },30000);
 
