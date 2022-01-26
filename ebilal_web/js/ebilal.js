@@ -43,14 +43,12 @@ function getPlayerState() {
     .then(response => response.text())  
   .then(response => {
     const obj = JSON.parse(response);
-    if (obj.state == "playing") {
-    document.getElementById('status').textContent = obj.status + " " + obj.mount;
-    } else {
-      document.getElementById('status').textContent = obj.status;
-    }
     if (obj.status === "playing") {
+      document.getElementById('status').textContent = obj.status + " " + obj.mount;
       document.getElementById('play_button_'+obj.mount).classList.remove('fa-play');
       document.getElementById('play_button_'+obj.mount).classList.add('fa-stop');
+    } else {
+      document.getElementById('status').textContent = obj.status;
     }
     state = obj;
   })
