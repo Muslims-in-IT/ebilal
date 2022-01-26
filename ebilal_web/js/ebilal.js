@@ -195,11 +195,8 @@ function toggleFav(mount) {
 
 //Toggle play
 function togglePlay(mount) {
-  console.log(state.status);
   if (state.status === "playing") {
-    console.log("Yep its playing");
     if (state.mount.includes(mount)) {
-      console.log("Yep its playing and its in the list");
       stop();
       document.getElementById('play_button_'+mount).classList.remove('fa-stop');
       document.getElementById('play_button_'+mount).classList.add('fa-play');
