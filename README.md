@@ -3,7 +3,13 @@
 This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup, it will play your selected live audio streams from livemasjid.com.
 
 ##
-Latest revision: 1.0 19th April 2021
+Latest: 26 Jan 2022
+Release notes:
+* Merged API into main code
+* Added web interface
+* Other bug fixes
+
+Revision: 1.0 19th April 2021
 Release notes: 
 * Added release notes
 * Added API
@@ -29,11 +35,16 @@ Release notes:
 12. `sudo chmod 644 /lib/systemd/system/ebilal*`
 13. `sudo systemctl daemon-reload`
 14. `sudo systemctl enable ebilal.service`
-15. `sudo systemctl enable ebilal_api.service`
+15. `cd /var/www/html/`
+16. `sudo ln -s /opt/ebilal/ebilal_web .`
+17. `sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/`
+18. `sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/ebilal_site_nginx`
+19. `sudo systemctl enable nginx`
+20. `sudo systemctl start nginx`
 
 ## Test
 1. `sudo systemctl start ebilal.service`
-2. `sudo systemctl start ebilal_api.service`
+2. Visit http://ebilal.local on your browser
 3. Listen for audio, if none, `sudo systemctl status ebilal.service`
 
 ## Configure audio device and stream
