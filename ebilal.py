@@ -102,13 +102,13 @@ class LivemasjidClient:
         logger.debug("Playing mount "+mount)
         self.playing = mount
         self.playurl(self.baseURL+mount)
+        self.state["status"] = "playing"
+        self.state["mount"] = mount
 
     def playurl(self,url):
         self.stop()
         logger.debug("Starting media player")
         self.process = subprocess.Popen(["ffplay", "-vn", "-nostats", "-autoexit", url], shell=False)
-        self.state["status"] = "playing "
-        self.state["mount"] = livemasjid.getplaying()
 
     def stop(self):
         logger.debug("stopping media player")
@@ -229,16 +229,16 @@ def volup():
 @app.get("/player/play/{mount}")
 def play(mount:str):
     livemasjid.playmount(mount)
-    return {"status": "playing " + livemasjid.getplaying()}
+    return livemasjid.getstate()
 
 @app.get("/player/stop")
 def stop():
     livemasjid.stop()
-    return {"status": "stopped"}
+    return livemasjid.getstate()
 
 @app.get("/player")
 def state():
-    return {"status": livemasjid.getstate()}
+    return livemasjid.getstate()
 
 @app.get("/mounts")
 def mounts():
