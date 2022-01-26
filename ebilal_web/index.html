@@ -49,7 +49,7 @@
       <li class="is-active" data-tab="1">
         <a>
           <span class="icon is-small"><i class="fa fa-cog"></i></span>
-          <span>Main</span>
+          <span>Settings</span>
         </a>
       </li>
       <li data-tab="2">
@@ -67,6 +67,10 @@
         <div class="card-content">
           <div class="content">
             Current config on eBilal.
+            <a style="float:right">
+              <span class="icon is-small"><i onclick="init()" class="fas fa-sync"></i></span>
+              <span>Refresh</span>
+            </a>
             <div class="columns">
               <div class="column">
                 <form class="box">
@@ -78,6 +82,14 @@
                   </div>
                   <button class="button is-primary"onclick="setTheFavs(this.form)">Update</button>
                 </form>
+                <div class="box">
+                  <div class="field">
+                    <label class="label">Logs</label>
+                    <div class="control">
+                      <textarea id='log' rows=10 cols=60 autofocus></textarea>
+                    </div>
+                  </div>
+                </div>
               </div>
               <div class="column">
                 <form class="box">
@@ -93,9 +105,7 @@
             </div>
           </div>
         </div>
-        <footer class="card-footer">
-          <a class="card-footer-item" onclick="init()">Refresh</a>
-        </footer>
+        <footer class="card-footer"></footer>
       </div>
     </div>
     <div class="is-inactive" data-content="2">
@@ -103,6 +113,10 @@
         <div class="card-content">
           <div class="content">
             Live streams
+            <a style="float:right">
+              <span class="icon is-small"><i onclick="init()" class="fas fa-sync"></i></span>
+              <span>Refresh</span>
+            </a>
             <div class="columns">
               <div class="column" id="livemounts">
               </div>

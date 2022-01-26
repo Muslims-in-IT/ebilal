@@ -6,6 +6,7 @@ import argparse
 import json
 import logging
 import logging.config
+from logging.handlers import RotatingFileHandler
 from importlib import util
 import os
 import subprocess
@@ -29,8 +30,17 @@ journald_handler.setFormatter(logging.Formatter(
     '[%(levelname)s] %(message)s'
 ))
 
+file_handler = RotatingFileHandler('ebilal_web/web.log', maxBytes=1024, backupCount=1)
+file_handler.setLevel(level=logging.DEBUG)
+
+# set a formatter with date and message
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s %(message)s'
+))
+
 # add the journald handler to the current logger
 logger.addHandler(journald_handler)
+logger.addHandler(file_handler)
 
 # LiveMasjid client
 class LivemasjidClient:

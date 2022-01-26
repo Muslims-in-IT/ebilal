@@ -2,13 +2,15 @@
 // Get the current config from the ebilal API
 
 var favourites=[];
-const baseurl = "http://ebilal.local/api/"; 
+const baseurl = "http://ebilal.local/";
+const apiurl = baseurl + "api/"; 
 var state;
 var livemounts;
+var txt = document.getElementById('log');
 
 // Get favourites from the ebilal API
 function getFavourites() {
-  var url = baseurl + "favourites";
+  var url = apiurl + "favourites";
   fetch(url) 
     .then(response => response.text())  
   .then(response => {
@@ -26,7 +28,7 @@ function getFavourites() {
 
 //Get volume settings
 function getVolume() {
-  url = baseurl + "volume";
+  url = apiurl + "volume";
   fetch(url) 
     .then(response => response.text())  
   .then(response => {
@@ -38,7 +40,7 @@ function getVolume() {
 
 // Get the player state
 function getPlayerState() {
-  url = baseurl + "player";
+  url = apiurl + "player";
   fetch(url) 
     .then(response => response.text())  
   .then(response => {
@@ -87,6 +89,23 @@ fetch(casturl)
     return livemounts;
   })
   .catch((err) => console.log("Can’t access " + casturl + " response." + err));
+}
+
+// Get log file from the ebilal API
+function getLog() {
+  url = baseurl + "web.log";  
+  fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    })
+    .then(response => response.text())
+    .then(response => {
+      txt.textContent = response;
+      txt.scrollTop = txt.scrollHeight;
+    })
+    .catch((err) => console.log("Can’t access " + url + " response." + err));
 }
 
 // Setup tabs on page load
@@ -139,7 +158,7 @@ function setTheFavs(form) {
 
 // Set the configured mount using the ebilal API
 function setFavourites(favourites) {
-  url = baseurl + "favourites";
+  url = apiurl + "favourites";
   let favObject = {favourites: favourites};
   console.log(favObject);
   fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'text/plain' },   body: JSON.stringify(favourites) })
@@ -210,7 +229,7 @@ function togglePlay(mount) {
 
 // Play a mount using the ebilal API
 async function play(mount) {
-  url = baseurl + "player/play/" + mount;
+  url = apiurl + "player/play/" + mount;
   const response = await fetch(url, {
     method: 'GET',
     headers: {
@@ -224,7 +243,7 @@ async function play(mount) {
 
 // Stop play using the ebilal API
 async function stop() {
-  url = baseurl + "player/stop";
+  url = apiurl + "player/stop";
   const response = await fetch(url, {
     method: 'GET',
     headers: {
@@ -243,7 +262,7 @@ function setTheVolume(form) {
 
 // Set the volume using the ebilal API
 async function setVolume(volume) {
-  url = baseurl + "volume" + "?vol=" + volume;
+  url = apiurl + "volume" + "?vol=" + volume;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -263,4 +282,7 @@ function init() {
 }
 
 init();
+setInterval(function(){
+  getLog();
+  },2000);
 
