@@ -282,7 +282,11 @@ function init() {
 }
 
 init();
+
+//Poll the ebilal API for the player state
 setInterval(function(){
   getLog();
-  },2000);
+  getPlayerState();
+  getLiveStreams();
+  },30000);
 
