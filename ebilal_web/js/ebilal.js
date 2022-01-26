@@ -42,15 +42,14 @@ function getPlayerState() {
   fetch(url) 
     .then(response => response.text())  
   .then(response => {
-    const obj = JSON.parse(response);
-    if (obj.status === "playing") {
-      document.getElementById('status').textContent = obj.status + " " + obj.mount;
-      document.getElementById('play_button_'+obj.mount).classList.remove('fa-play');
-      document.getElementById('play_button_'+obj.mount).classList.add('fa-stop');
+    state = JSON.parse(response);
+    if (state.status === "playing") {
+      document.getElementById('status').textContent = state.status + " " + state.mount;
+      document.getElementById('play_button_'+state.mount).classList.remove('fa-play');
+      document.getElementById('play_button_'+state.mount).classList.add('fa-stop');
     } else {
-      document.getElementById('status').textContent = obj.status;
+      document.getElementById('status').textContent = state.status;
     }
-    state = obj;
   })
   .catch((err) => console.log("Can’t access " + url + " response. " + err));
 }
@@ -196,16 +195,19 @@ function toggleFav(mount) {
 
 //Toggle play
 function togglePlay(mount) {
+  console.log(state.status);
   if (state.status === "playing") {
+    console.log("Yep its playing");
     if (state.mount.includes(mount)) {
+      console.log("Yep its playing and its in the list");
       stop();
-      document.getElementById('play_button_'+mount).classList.remove('fa-play');
-      document.getElementById('play_button_'+mount).classList.add('fa-stop');
+      document.getElementById('play_button_'+mount).classList.remove('fa-stop');
+      document.getElementById('play_button_'+mount).classList.add('fa-play');
     }
   } else {
     play(mount);
-    document.getElementById('play_button_'+mount).classList.remove('fa-stop');
-    document.getElementById('play_button_'+mount).classList.add('fa-play');
+    document.getElementById('play_button_'+mount).classList.remove('fa-play');
+    document.getElementById('play_button_'+mount).classList.add('fa-stop');
   }
 }
 
@@ -219,7 +221,8 @@ async function play(mount) {
     }
   });
   const playerJson = await response.json(); //extract JSON from the http response
-  document.getElementById('status').textContent = playerJson.status;
+  state = playerJson;
+  document.getElementById('status').textContent = state.status;
 };
 
 // Stop play using the ebilal API
@@ -232,7 +235,8 @@ async function stop() {
     }
   });
   const playerJson = await response.json(); //extract JSON from the http response
-  document.getElementById('status').textContent = playerJson.status;
+  state = playerJson;
+  document.getElementById('status').textContent = state.status;
 };
 
 //Set volume using form data

@@ -102,7 +102,7 @@ class LivemasjidClient:
         logger.debug("Playing mount "+mount)
         self.playing = mount
         self.playurl(self.baseURL+mount)
-        self.state["status"] = "playing "
+        self.state["status"] = "playing"
         self.state["mount"] = mount
 
     def playurl(self,url):
