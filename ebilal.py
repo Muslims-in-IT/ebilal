@@ -229,16 +229,16 @@ def volup():
 @app.get("/player/play/{mount}")
 def play(mount:str):
     livemasjid.playmount(mount)
-    return {livemasjid.getstate()}
+    return livemasjid.getstate()
 
 @app.get("/player/stop")
 def stop():
     livemasjid.stop()
-    return {livemasjid.getstate()}
+    return livemasjid.getstate()
 
 @app.get("/player")
 def state():
-    return {livemasjid.getstate()}
+    return livemasjid.getstate()
 
 @app.get("/mounts")
 def mounts():
