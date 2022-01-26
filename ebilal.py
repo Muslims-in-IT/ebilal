@@ -29,8 +29,17 @@ journald_handler.setFormatter(logging.Formatter(
     '[%(levelname)s] %(message)s'
 ))
 
+file_handler = logging.FileHandler('ebilal_web/web.log')
+file_handler.setLevel(level=logging.DEBUG)
+
+# set a formatter with date and message
+file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s [%(levelname)s] %(message)s'
+))
+
 # add the journald handler to the current logger
 logger.addHandler(journald_handler)
+logger.addHandler(file_handler)
 
 # LiveMasjid client
 class LivemasjidClient:

@@ -5,6 +5,12 @@ var favourites=[];
 const baseurl = "http://ebilal.local/api/"; 
 var state;
 var livemounts;
+var txt = document.getElementById('log');
+
+setInterval(function(){
+txt.value += '\ntest';
+txt.scrollTop = txt.scrollHeight
+},2000);
 
 // Get favourites from the ebilal API
 function getFavourites() {
