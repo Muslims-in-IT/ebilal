@@ -66,6 +66,8 @@ Release notes:
 Try the new API here:
 http://ebilal.local:8000/docs  (if hostname is ebilal)
 
+## Web interface
+Visit the alpha web interface by using your browser to visit the IP address of your Raspberry pi: http://<pi ip address>/
 
 ## Optional
 
