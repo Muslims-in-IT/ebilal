@@ -25,6 +25,6 @@ COPY . /opt/ebilal
 COPY settings_example.toml /opt/ebilal/settings.toml
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "-k", "uvicorn.workers.UvicornWorker", "ebilal_api:app"] && ["python3","/opt/ebilal/ebi]al.py"]
+CMD ["python3","/opt/ebilal/ebilal.py"]
 
 RUN [ "cross-build-end" ]
