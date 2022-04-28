@@ -6,6 +6,8 @@ After=multi-user.target
 User=pi
 Group=pi
 Type=idle
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+Environment="PULSE_RUNTIME_PATH=/run/user/1000/pulse/"
 WorkingDirectory=/opt/ebilal/
 ExecStart=python3 ebilal.py
 Restart=always
