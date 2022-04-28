@@ -15,8 +15,6 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get -qy clean all
 
-USER pi
-
 # Install pip requirements
 RUN pip3 install --upgrade pip
 COPY requirements.txt .
