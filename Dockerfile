@@ -23,7 +23,7 @@ EXPOSE 8000
 
 # Setup nginx
 RUN ln -s /opt/ebilal/ebilal_web /var/www/html
-COPY other/ebilal_site_nginx /etc/nginx/sites-available/
+COPY ./other/ebilal_site_nginx /etc/nginx/sites-available/
 EXPOSE 80
 
 CMD ["python3","/opt/ebilal/ebilal.py"]&&["nginx", "-g", "daemon off;"]
