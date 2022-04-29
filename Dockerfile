@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
-RUN install_packages wget git ffmpeg ssh-client build-essential libsystemd-dev nginx
+RUN install_packages ffmpeg nginx
 
 # Install pip requirements
 RUN pip3 install --upgrade pip
