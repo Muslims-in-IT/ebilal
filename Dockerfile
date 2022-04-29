@@ -1,5 +1,7 @@
 FROM balenalib/raspberrypi3-python
 
+RUN [ "cross-build-start" ]
+
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE=1
 
@@ -18,3 +20,5 @@ COPY . /opt/ebilal
 COPY settings_example.toml /opt/ebilal/settings.toml
 
 CMD ["python3","/opt/ebilal/ebilal.py"]
+
+RUN [ "cross-build-end" ]
