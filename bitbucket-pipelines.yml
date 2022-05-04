@@ -20,3 +20,6 @@ pipelines:
           - docker login --username $DOCKER_HUB_USERNAME --password $DOCKER_HUB_PASSWORD
           # push the new Docker image to the Docker registry
           - docker push $IMAGE_NAME
+          # Export the image into a tar file
+          - export CONTAINER=$(docker run -d mitpeople/ebilal_pi0)
+          - docker export $CONTAINER > ebilal_pi0.tar
