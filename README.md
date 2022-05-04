@@ -24,7 +24,7 @@ Release notes:
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup [Wifi and SSH](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 3. Boot and SSH
-4. `sudo apt update && sudo apt install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev nginx`
+4. `sudo apt update && sudo apt install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev libasound-dev nginx`
 5. `cd /opt/`
 6. `sudo git clone https://bitbucket.org/mitpeople/ebilal.git`
 7. `sudo chown -R pi:pi ebilal`
@@ -76,7 +76,7 @@ If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-p
 
 ## Experimental
 A docker image has been setup, usage:
-docker run mitpeople/ebilal:latest <mountname> --device /dev/snd 
+docker run -ti --rm -v /dev/snd:/dev/snd --privileged mitpeople/ebilal_pi0
 
 ## License
 Licensed under AGPL-3.0-or-later (or AGPL-3.0-only 

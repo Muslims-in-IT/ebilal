@@ -6,4 +6,4 @@ dynaconf>=0.6.0
 fastapi>=0.63.0
 uvicorn>=0.13.4
 pyinotify>=0.9.6
-systemd>=0.16.1
+cysystemd>=1.5.2

@@ -8,10 +8,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
-RUN install_packages ffmpeg nginx
+RUN install_packages ffmpeg nginx build-essential libsystemd-dev libasound-dev
 
 # Install pip requirements
 RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade setuptools
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 

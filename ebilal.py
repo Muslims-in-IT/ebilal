@@ -15,7 +15,7 @@ import threading
 from dynaconf import LazySettings
 from dynaconf.loaders.toml_loader import write
 import pyinotify
-from systemd.journal import JournaldLogHandler
+from cysystemd.journal import JournaldLogHandler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
