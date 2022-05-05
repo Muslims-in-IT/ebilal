@@ -7,7 +7,6 @@ import json
 import logging
 import logging.config
 from logging.handlers import RotatingFileHandler
-from importlib import util
 import os
 import subprocess
 import alsaaudio
@@ -70,6 +69,7 @@ class LivemasjidClient:
         logger.debug("Server URL: "+ self.baseURL)
         self.mountToPlay = settings.default.mounts
         self.audio_device = settings.default.audio_device
+        self.pimoroni = settings.default.pimoroni
         if (settings.default.loglevel == "DEBUG"):
             logger.setLevel(logging.DEBUG)
         elif (settings.default.loglevel == "INFO"):
@@ -260,9 +260,7 @@ def main():
     livemasjid.connect()
 
     #Setup the Pimoroni module if present
-    phat_spec = util.find_spec("phatbeat")
-    found = phat_spec is not None
-    if found:
+    if (livemasjid.pimoroni):
         logger.info("Phatbeat found")
         import phatbeat
         phatbeat.set_all(0,128,0,0.1)
