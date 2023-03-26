@@ -2,6 +2,8 @@
 
 This project turns a Raspberry Pi into an alternative to Radio Bilal. Once setup, it will play your selected live audio streams from livemasjid.com.
 
+Moving the primary repo to [Github](https://github.com/Muslims-in-IT/ebilal)
+
 ##
 Latest: 26 Jan 2022
 Release notes:
