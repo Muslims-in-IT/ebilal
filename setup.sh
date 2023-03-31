@@ -21,7 +21,7 @@ printf "[4/5]⏳   Setting up eBilal web"
 cd /var/www/html/
 sudo ln -s /opt/ebilal/ebilal_web .
 sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/
-sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/ebilal_site_nginx
+sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/default
 sudo systemctl enable nginx
 sudo systemctl start nginx
 printf "[5/5]🎉   Finished! Visit http://ebilal.local on your browser.\n"

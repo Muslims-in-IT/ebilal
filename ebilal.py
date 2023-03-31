@@ -118,7 +118,7 @@ class LivemasjidClient:
     def playurl(self,url):
         self.stop()
         logger.debug("Starting media player")
-        self.process = subprocess.Popen(["ffplay", "-vn", "-nostats", "-autoexit", url], shell=False)
+        self.process = subprocess.Popen(["ffplay", "-vn", "-nostats", "-autoexit", "-nodisp", url], shell=False)
 
     def stop(self):
         logger.debug("stopping media player")
@@ -311,7 +311,7 @@ def main():
             os.system("sudo shutdown -h now")
 
     #Start the API
-    uvicorn.run("ebilal:app",host='0.0.0.0', port=8000, reload=True, debug=True)
+    uvicorn.run("ebilal:app",host='0.0.0.0', port=8000, reload=True)
 
     # Watch for changes in the settings file
     wm = pyinotify.WatchManager()
