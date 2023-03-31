@@ -28,7 +28,7 @@ Release notes:
 3. Boot and SSH
 4. `sudo apt update && sudo apt install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev libasound-dev nginx`
 5. `cd /opt/`
-6. `sudo git clone https://bitbucket.org/mitpeople/ebilal.git`
+6. `sudo git clone git@github.com:Muslims-in-IT/ebilal.git`
 7. `sudo chown -R pi:pi ebilal`
 8. `cd ebilal`
 9. `pip3 install -r requirements.txt`
