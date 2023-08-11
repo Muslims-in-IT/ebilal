@@ -29,20 +29,23 @@ Release notes:
 4. `sudo apt update && sudo apt install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev libasound-dev nginx`
 5. `cd /opt/`
 6. `sudo git clone git@github.com:Muslims-in-IT/ebilal.git`
-7. `sudo chown -R pi:pi ebilal`
+7. `sudo chgrp -R users ebilal`
 8. `cd ebilal`
-9. `pip3 install -r requirements.txt`
-10. `cp /opt/ebilal/settings_example.toml /opt/ebilal/settings.toml`
-11. `sudo cp /opt/ebilal/other/*.service /lib/systemd/system/`
-12. `sudo chmod 644 /lib/systemd/system/ebilal*`
-13. `sudo systemctl daemon-reload`
-14. `sudo systemctl enable ebilal.service`
-15. `cd /var/www/html/`
-16. `sudo ln -s /opt/ebilal/ebilal_web .`
-17. `sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/`
-18. `sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/ebilal_site_nginx`
-19. `sudo systemctl enable nginx`
-20. `sudo systemctl start nginx`
+9. `python -m venv venv`
+10. 'source venv/bin/activate'
+11. `pip3 install -r requirements.txt`
+12. `cp /opt/ebilal/settings_example.toml /opt/ebilal/settings.toml`
+13. `sudo cp /opt/ebilal/other/*.service /lib/systemd/system/`
+14. `sudo chmod 644 /lib/systemd/system/ebilal*`
+15. `sudo systemctl daemon-reload`
+16. `sudo systemctl enable ebilal.service`
+17. `cd /var/www/html/`
+18. `sudo ln -s /opt/ebilal/ebilal_web .`
+19. `sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/`
+20. `sudo rm /etc/nginx/sites-enabled/ebilal_site_nginx/default
+21. `sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/ebilal_site_nginx`
+22. `sudo systemctl enable nginx`
+23. `sudo systemctl start nginx`
 
 ## Test
 1. `sudo systemctl start ebilal.service`
