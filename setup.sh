@@ -7,10 +7,12 @@ printf "[2/5]⏳   Fetching eBilal code"
 cd /opt/
 sudo git clone https://bitbucket.org/mitpeople/ebilal.git
 printf "[3/5]⏳   Fetching Python dependencies"
-sudo chown -R pi:pi ebilal
+sudo chgrp -R users ebilal
 cd ebilal
+python -m venv venv
+source venv/bin/activate
 pip3 install -r requirements.txt
-cp ebilal/settings_example.toml ebilal/settings.toml
+cp settings_example.toml settings.toml
 printf "[4/5]⏳   Setting up eBilal as a service"
 sudo cp other/*.service /lib/systemd/system/
 sudo chmod 644 /lib/systemd/system/ebilal*
@@ -21,7 +23,8 @@ printf "[4/5]⏳   Setting up eBilal web"
 cd /var/www/html/
 sudo ln -s /opt/ebilal/ebilal_web .
 sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/
-sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/default
+sudo rm /etc/nginx/sites-enabled/default
+sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/ebilal
 sudo systemctl enable nginx
 sudo systemctl start nginx
 printf "[5/5]🎉   Finished! Visit http://ebilal.local on your browser.\n"
