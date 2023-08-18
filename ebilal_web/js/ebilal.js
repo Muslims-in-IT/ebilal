@@ -2,8 +2,7 @@
 // Get the current config from the ebilal API
 
 var favourites=[];
-const baseurl = "http://ebilal.local/";
-const apiurl = baseurl + "api/"; 
+const apiurl = "/api/"; 
 var state;
 var livemounts;
 var txt = document.getElementById('log');
@@ -23,7 +22,7 @@ function getFavourites() {
     }
     console.log(favourites);
   })
-  .catch((err) => console.log("Can’t access " + url + " response." + err));
+  .catch((err) => console.log("Cannot access " + url + " response." + err));
 }
 
 //Get volume settings
