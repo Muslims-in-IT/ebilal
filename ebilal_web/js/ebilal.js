@@ -158,9 +158,8 @@ function setTheFavs(form) {
 // Set the configured mount using the ebilal API
 function setFavourites(favourites) {
   url = apiurl + "favourites";
-  let favObject = {favourites: favourites};
-  console.log(favObject);
-  fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'text/plain' },   body: JSON.stringify(favourites) })
+  console.log(JSON.stringify({"favourites":favourites}))
+  fetch(url, {  method: 'POST',   headers: { 'Content-Type': 'application/json' },   body: JSON.stringify({"favourites":favourites})})
     .then(response => response.text())
   .then(response => {
     const obj = JSON.parse(response);
