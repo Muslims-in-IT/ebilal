@@ -92,7 +92,7 @@ fetch(casturl)
 
 // Get log file from the ebilal API
 function getLog() {
-  url = baseurl + "web.log";  
+  url = "/web.log";  
   fetch(url, {
       method: 'GET',
       headers: {
