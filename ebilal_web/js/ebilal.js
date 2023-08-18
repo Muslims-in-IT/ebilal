@@ -34,7 +34,7 @@ function getVolume() {
     const obj = JSON.parse(response);
     document.getElementById('volume').value = obj.volume;
   })
-  .catch((err) => console.log("Can’t access " + url + " response. Blocked by browser?" + err));
+  .catch((err) => console.log("Cannot access " + url + " response. Blocked by browser?" + err));
 }
 
 // Get the player state
@@ -52,7 +52,7 @@ function getPlayerState() {
       document.getElementById('status').textContent = state.status;
     }
   })
-  .catch((err) => console.log("Can’t access " + url + " response. " + err));
+  .catch((err) => console.log("Cannot access " + url + " response. " + err));
 }
 
 // Get the current live streams from the ebilal API
@@ -87,7 +87,7 @@ fetch(casturl)
     document.getElementById('livemounts').innerHTML = boxes;
     return livemounts;
   })
-  .catch((err) => console.log("Can’t access " + casturl + " response." + err));
+  .catch((err) => console.log("Cannot access " + casturl + " response." + err));
 }
 
 // Get log file from the ebilal API
@@ -104,7 +104,7 @@ function getLog() {
       txt.textContent = response;
       txt.scrollTop = txt.scrollHeight;
     })
-    .catch((err) => console.log("Can’t access " + url + " response." + err));
+    .catch((err) => console.log("Cannott access " + url + " response." + err));
 }
 
 // Setup tabs on page load
@@ -170,7 +170,7 @@ function setFavourites(favourites) {
       console.log(obj.error);
     }   // error  
   })
-  .catch((err) => console.log("Can’t access " + url + " response. Blocked by browser?" + err));
+  .catch((err) => console.log("Cannot access " + url + " response. Blocked by browser?" + err));
 }
 
 // Add a mount to the subscribed mounts

@@ -17,6 +17,7 @@ import pyinotify
 from cysystemd.journal import JournaldLogHandler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from typing import List
 import uvicorn
 logger = logging.getLogger(__name__)
@@ -197,9 +198,12 @@ current_vol = mixer.getvolume()[0]
 def read_mounts():
     return {"favourites": settings.default.mounts}
 
+class favourites(BaseModel):
+    favourites: List[str]
+
 @app.post("/favourites")
-def write_mounts(favourites: List[str]):
-    settings.default.mounts = favourites
+def write_mounts(favourites: favourites):
+    settings.default.mounts = favourites.favourites
     write('settings.toml', settings.to_dict() , merge=False)
     return {"favourites": settings.default.mounts}
 
@@ -218,23 +222,23 @@ def read_root():
     return {"volume": mixer.getvolume()[0]}
 
 @app.post("/volume")
-def volset(vol:int):
-    mixer.setvolume(vol)
-    return {"volume": mixer.getvolume()}
+def volset(volume:int):
+    mixer.setvolume(volume)
+    return {"volume": mixer.getvolume()[0]}
 
 @app.post("/volume/up")
 def volup():
     if (mixer.getvolume()[0] <= 90):
         current_vol = mixer.getvolume()[0] + 10
         mixer.setvolume(current_vol)
-    return {"volume": mixer.getvolume()}
+    return {"volume": mixer.getvolume()[0]}
 
 @app.post("/volume/down")
 def volup():
     if (mixer.getvolume()[0] >= 10):
         current_vol = mixer.getvolume()[0] - 10
         mixer.setvolume(current_vol)
-    return {"volume": mixer.getvolume()}
+    return {"volume": mixer.getvolume()[0]}
 
 @app.get("/player/play/{mount}")
 def play(mount:str):
