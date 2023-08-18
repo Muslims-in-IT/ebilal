@@ -261,7 +261,7 @@ function setTheVolume(form) {
 
 // Set the volume using the ebilal API
 async function setVolume(volume) {
-  url = apiurl + "volume" + "?vol=" + volume;
+  url = apiurl + "volume" + "?volume=" + volume;
   const response = await fetch(url, {
     method: 'POST',
     headers: {
