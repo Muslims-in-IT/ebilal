@@ -1,0 +1,40 @@
+FROM arm32v6/alpine:3.14
+
+# Keeps Python from generating .pyc files in the container
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Turns off buffering for easier container logging
+ENV PYTHONUNBUFFERED=1
+
+RUN apk add --no-cache alsa-utils \
+        alsa-utils-doc \
+        alsa-lib \
+        alsaconf \
+        alsa-utils \
+        ffmpeg \
+        nginx \
+        python3 \
+        python3-dev \
+        py3-pip \
+        curl
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Install pip requirements
+RUN pip3 install --upgrade pip
+RUN pip3 install --upgrade setuptools
+COPY requirements.txt .
+RUN pip3 install -r requirements.txt
+
+# Setup main app
+WORKDIR /opt/ebilal
+COPY . /opt/ebilal
+COPY settings_example.toml /opt/ebilal/settings.toml
+EXPOSE 8000
+
+# Setup nginx
+RUN ln -s /opt/ebilal/ebilal_web /var/www/html
+COPY ./other/ebilal_site_nginx /etc/nginx/sites-available/
+EXPOSE 80
+
+CMD ["python3","/opt/ebilal/ebilal.py"]&&["nginx", "-g", "daemon off;"]
