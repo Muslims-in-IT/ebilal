@@ -7,3 +7,4 @@ __pycache__/
 poetry.lock
 .gitignore
 pyproject.toml
+.DS_Store
