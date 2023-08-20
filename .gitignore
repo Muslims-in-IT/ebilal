@@ -8,3 +8,4 @@ poetry.lock
 .gitignore
 pyproject.toml
 .DS_Store
+ebilal_web/web.log
