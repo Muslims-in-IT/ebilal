@@ -32,7 +32,7 @@ Release notes:
 7. `sudo chgrp -R users ebilal`
 8. `cd ebilal`
 9. `python -m venv venv`
-10. 'source venv/bin/activate'
+10. `source venv/bin/activate`
 11. `pip3 install -r requirements.txt`
 12. `cp /opt/ebilal/settings_example.toml /opt/ebilal/settings.toml`
 13. `sudo cp /opt/ebilal/other/*.service /lib/systemd/system/`
@@ -42,7 +42,7 @@ Release notes:
 17. `cd /var/www/html/`
 18. `sudo ln -s /opt/ebilal/ebilal_web .`
 19. `sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/`
-20. `sudo rm /etc/nginx/sites-enabled/ebilal_site_nginx/default
+20. `sudo rm /etc/nginx/sites-enabled/ebilal_site_nginx/default`
 21. `sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/ebilal_site_nginx`
 22. `sudo systemctl enable nginx`
 23. `sudo systemctl start nginx`
@@ -81,7 +81,8 @@ If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-p
 
 ## Experimental
 A docker image has been setup, usage:
-docker run -ti --rm -v /dev/snd:/dev/snd --privileged mitpeople/ebilal_pi0
+`docker run -ti --rm -v /dev/snd:/dev/snd --privileged mitpeople/ebilal_pi0:latest`
+`docker run -it --rm --device /dev/snd mitpeople/ebilal:latest`
 
 ## License
 Licensed under AGPL-3.0-or-later (or AGPL-3.0-only 
