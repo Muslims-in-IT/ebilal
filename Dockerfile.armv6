@@ -21,13 +21,15 @@ RUN apk add --no-cache alsa-utils \
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Install pip requirements
+WORKDIR /opt/ebilal
+RUN python3 -m venv venv
+RUN source venv/bin/activate
 RUN pip3 install --upgrade pip
 RUN pip3 install --upgrade setuptools
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
 # Setup main app
-WORKDIR /opt/ebilal
 COPY . /opt/ebilal
 COPY settings_example.toml /opt/ebilal/settings.toml
 EXPOSE 8000
@@ -37,4 +39,4 @@ RUN ln -s /opt/ebilal/ebilal_web /var/www/html
 COPY ./other/ebilal_site_nginx /etc/nginx/sites-available/
 EXPOSE 80
 
-CMD ["python3","/opt/ebilal/ebilal.py"]&&["nginx", "-g", "daemon off;"]
+CMD ["venv/bin/python3","/opt/ebilal/ebilal.py"]&&["nginx", "-g", "daemon off;"]
