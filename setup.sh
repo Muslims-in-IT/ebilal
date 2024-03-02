@@ -5,7 +5,7 @@ printf "[1/5]⏳   Installing apt packages"
 sudo apt update && sudo apt -y install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev libasound2-dev nginx
 printf "[2/5]⏳   Fetching eBilal code"
 cd /opt/
-sudo git clone https://bitbucket.org/mitpeople/ebilal.git
+sudo git clone https://github.com/Muslims-in-IT/ebilal
 printf "[3/5]⏳   Fetching Python dependencies"
 sudo chgrp -R users ebilal
 cd ebilal
