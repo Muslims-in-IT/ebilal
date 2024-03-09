@@ -13,7 +13,7 @@ sudo adduser ebilal audio
 sudo chown -R ebilal:users ebilal
 printf "[3/5]⏳   Fetching Python dependencies"
 cd ebilal
-sudo -u ebilal python -m venv venv
+sudo -u ebilal python3 -m venv venv
 source venv/bin/activate
 sudo -u ebilal pip3 install -r requirements.txt
 cp settings_example.toml settings.toml
