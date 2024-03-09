@@ -17,35 +17,32 @@ Release notes:
 * Added API
 * Added support for alternative ALSA audio devices in settings (still testing)
 
-## Installation
 ### The quick way 
-1. Download setup.sh from the link above
-2. `bash setup.sh`
+1. Clone the repository: `git clone https://github.com/Muslims-in-IT/ebilal.git`
+2. Navigate to the cloned repository: `cd ebilal`
+3. Run the setup script: `bash setup.sh`
 
 ### The responsible way
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup [Wifi and SSH](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 3. Boot and SSH
 4. `sudo apt update && sudo apt install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev libasound-dev nginx`
-5. `cd /opt/`
-6. `sudo git clone git@github.com:Muslims-in-IT/ebilal.git`
-7. `sudo chgrp -R users ebilal`
-8. `cd ebilal`
-9. `python -m venv venv`
-10. `source venv/bin/activate`
-11. `pip3 install -r requirements.txt`
-12. `cp /opt/ebilal/settings_example.toml /opt/ebilal/settings.toml`
-13. `sudo cp /opt/ebilal/other/*.service /lib/systemd/system/`
+5. `sudo adduser --disabled-password --gecos "" ebilal`
+6. `cd /opt/`
+7. `sudo git clone https://github.com/Muslims-in-IT/ebilal.git`
+8. `sudo chown -R ebilal:ebilal ebilal`
+9. `cd ebilal`
+10. `sudo -u ebilal python3 -m venv venv`
+11. `sudo -u ebilal bash -c "source venv/bin/activate && pip3 install -r requirements.txt"`
+12. `cp settings_example.toml settings.toml`
+13. `sudo cp other/*.service /lib/systemd/system/`
 14. `sudo chmod 644 /lib/systemd/system/ebilal*`
 15. `sudo systemctl daemon-reload`
 16. `sudo systemctl enable ebilal.service`
 17. `cd /var/www/html/`
 18. `sudo ln -s /opt/ebilal/ebilal_web .`
-19. `sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/`
-20. `sudo rm /etc/nginx/sites-enabled/ebilal_site_nginx/default`
-21. `sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/ebilal_site_nginx`
-22. `sudo systemctl enable nginx`
-23. `sudo systemctl start nginx`
+19. `sudo cp other/ebilal_site_nginx /etc/nginx/sites-available/`
+20. `sudo systemctl restart nginx`
 
 ## Test
 1. `sudo systemctl start ebilal.service`

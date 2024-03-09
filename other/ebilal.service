@@ -4,6 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=idle
+User=ebilal
 WorkingDirectory=/opt/ebilal/
 ExecStart=/opt/ebilal/venv/bin/python3 ebilal.py
 Restart=always
