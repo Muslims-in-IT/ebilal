@@ -22,9 +22,12 @@ sudo adduser ebilal audio
 sudo chown -R ebilal:users ebilal
 printf "[3/5]⏳   Fetching Python dependencies"
 cd ebilal
-sudo -u ebilal python3 -m venv venv
-sudo -u ebilal bash -c "source venv/bin/activate && pip3 install --no-cache-dir -r requirements.txt"
+sudo su - ebilal << EOF
+python3 -m venv venv
+source venv/bin/activate
+pip3 install --no-cache-dir -r requirements.txt
 cp settings_example.toml settings.toml
+EOF
 printf "[4/5]⏳   Setting up eBilal as a service"
 sudo cp other/*.service /lib/systemd/system/
 sudo chmod 644 /lib/systemd/system/ebilal*
