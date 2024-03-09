@@ -41,4 +41,5 @@ if [ ! -L "./ebilal_web" ]; then
     sudo ln -s /opt/ebilal/ebilal_web .
 fi
 sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/
 sudo systemctl restart nginx
