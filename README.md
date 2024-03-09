@@ -25,43 +25,9 @@ Release notes:
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
 2. Setup [Wifi and SSH](https://www.raspberrypi.org/documentation/configuration/wireless/headless.md)
 3. Boot and SSH
-4. `sudo apt update && sudo apt install git python3 python3-pip ffmpeg ssh-client build-essential libsystemd-dev libasound-dev nginx`
-5. `sudo adduser --disabled-password --gecos "" ebilal`
-6. `cd /opt/`
-7. `sudo git clone https://github.com/Muslims-in-IT/ebilal.git`
-8. `sudo chown -R ebilal:ebilal ebilal`
-9. `cd ebilal`
-10. `sudo -u ebilal python3 -m venv venv`
-11. `sudo -u ebilal bash -c "source venv/bin/activate && pip3 install -r requirements.txt"`
-12. `cp settings_example.toml settings.toml`
-13. `sudo cp other/*.service /lib/systemd/system/`
-14. `sudo chmod 644 /lib/systemd/system/ebilal*`
-15. `sudo systemctl daemon-reload`
-16. `sudo systemctl enable ebilal.service`
-17. `cd /var/www/html/`
-18. `sudo ln -s /opt/ebilal/ebilal_web .`
-19. `sudo cp other/ebilal_site_nginx /etc/nginx/sites-available/`
-20. `sudo systemctl restart nginx`
-
-## Test
-1. `sudo systemctl start ebilal.service`
-2. Visit http://ebilal.local on your browser
-3. Listen for audio, if none, `sudo systemctl status ebilal.service`
-
-## Configure audio device and stream
-1. Modify settings.toml and update `MOUNTS=["activestream"]` to set streams to listen to (pick from livemasjid.com using the last word in the stream URL). e.g. `MOUNTS=["greensidemasjid"]`
-2. Audio device `audio_device=""` can be set to the value of the device name when running `sudo amixer` Default is "", other options to try: "PCM" or "Master"
-
-### To check status and debug:
-`sudo systemctl status ebilal.service`
-`journalctl -u ebilal.service -f`
-
-## Updates
-1. `cd /opt/ebilal`
-2. `git reset --hard origin/master`    (Note: this will override your settings.toml, so make a copy 1st)
-3. `git pull`
-4. `pip3 install -r requirements.txt`
-5. `sudo systemctl restart ebilal.service`
+4. Download the setup script: `wget https://raw.githubusercontent.com/Muslims-in-IT/ebilal/main/setup.sh`
+5. Review the setup script: `cat setup.sh`
+6. Run the steps manually one at a time or if you're comfortable with the script, run it: `bash setup.sh`
 
 ## API
 Try the new API here:
