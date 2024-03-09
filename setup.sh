@@ -37,6 +37,8 @@ sudo systemctl enable ebilal.service
 sudo systemctl start ebilal.service
 printf "[6/6]⏳   Setting up eBilal web"
 cd /var/www/html/
-sudo ln -s /opt/ebilal/ebilal_web .
+if [ ! -L "./ebilal_web" ]; then
+    sudo ln -s /opt/ebilal/ebilal_web .
+fi
 sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/
 sudo systemctl restart nginx
