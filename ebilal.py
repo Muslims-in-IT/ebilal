@@ -263,7 +263,7 @@ def main():
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid.connect()
 
-    #Setup the Pimoroni module if present
+    #Setup the Pimoroni module if it is enabled in settings
     if (livemasjid.pimoroni):
         logger.info("Phatbeat found")
         import phatbeat

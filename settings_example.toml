@@ -1,6 +1,6 @@
 [DEFAULT]
 server_url = "http://livemasjid.com:8000/"
-mounts = [ "greensidemasjid",]
+mounts = [ "activestream",]
 mounts_list = [ "activestream", "altarteel", "arilambat", "bergville", "buccleuch", "britsjamia", "cpt", "crosby", "dawatulhaq", "dun", "duzak", "ermelo", "greensidemasjid", "habibiacpt", "hafizqaasim", "hma_furqaan", "hmjamaat", "homesteadparkmasjid", "imraantest", "inaamiyyah", "jamiatkzn", "kaa", "kai", "khanqahzakariyyah", "kia", "kkm", "klerksdorp", "kma", "kszt", "lakefield", "lakewood", "learndeen", "majlis", "mansoor", "manzilparkmasjid", "marlboromasjid", "masjidhamza", "masjidsalaam", "mid", "mlakoodee", "mlanees", "mlbham", "mlilyas", "mlridwaan", "mlyusufbhikhoo", "mountainrise", "mrmsound", "mueenuddeen", "muftiak", "muftilorgat", "muftimenk", "muftisalejee", "muftisiraj", "muftiydesai", "muftiyusuf", "musjidemaseehulla", "musjidussalaam", "naqshbandi", "newcastle", "noor", "northcliff", "northcliff.ogg", "qariarishaq", "rahmaniyyah", "rmsc", "roshneemasjid", "rsvltmusalla", "saqu", "sautulquraan", "sautunnoor2", "stangermasjid", "svaid", "taqwaboys", "thejamiat", "uitenhage", "umartest", "umartest.ogg", "umma", "welkom", "westville", "whitenoise", "witbank", "witbanktown", "yusufmtest",]
 audio_device=""
 loglevel="DEBUG"
