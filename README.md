@@ -18,9 +18,8 @@ Release notes:
 * Added support for alternative ALSA audio devices in settings (still testing)
 
 ### The quick way 
-1. Clone the repository: `git clone https://github.com/Muslims-in-IT/ebilal.git`
-2. Navigate to the cloned repository: `cd ebilal`
-3. Run the setup script: `bash setup.sh`
+1. Download the setup script: `wget https://raw.githubusercontent.com/Muslims-in-IT/ebilal/main/setup.sh`
+2. Run the setup script: `bash setup.sh`
 
 ### The responsible way
 1. Install latest [Raspbian Lite](https://downloads.raspberrypi.org/raspbian_lite_latest)
