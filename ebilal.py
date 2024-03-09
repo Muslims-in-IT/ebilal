@@ -264,7 +264,7 @@ def main():
     livemasjid.connect()
 
     #Setup the Pimoroni module if present
-    if (livemasjid.pimoroni):
+    if (self.pimoroni):
         logger.info("Phatbeat found")
         import phatbeat
         phatbeat.set_all(0,128,0,0.1)
