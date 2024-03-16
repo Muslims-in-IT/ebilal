@@ -46,7 +46,7 @@ logger.addHandler(file_handler)
 class LivemasjidClient:
     """Livemasjid client Object"""
     def __init__(self):
-        self.client = mqtt.Client()
+        self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1)
         self.livestreams = []
         self.mounts = {}
         self.state = {"status":"starting"}
