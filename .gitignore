@@ -9,3 +9,4 @@ poetry.lock
 pyproject.toml
 .DS_Store
 ebilal_web/web.log
+.DS_Store
