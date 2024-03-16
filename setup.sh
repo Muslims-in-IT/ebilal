@@ -42,4 +42,6 @@ if [ ! -L "./ebilal_web" ]; then
 fi
 sudo cp /opt/ebilal/other/ebilal_site_nginx /etc/nginx/sites-available/
 sudo ln -s /etc/nginx/sites-available/ebilal_site_nginx /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
 sudo systemctl restart nginx
+sudo systemctl status ebilal.service
