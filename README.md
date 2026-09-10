@@ -83,6 +83,8 @@ If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-p
    ```
    This persists the control so `alsa-restore.service` recreates it automatically on every boot, before `ebilal.service` starts.
 4. Set `audio_device="PCM"` in `settings.toml` and set `pimoroni=true` to enable the pHAT Beat's buttons and LEDs.
+5. The `ebilal` user needs to be in the `gpio` group for the LEDs/buttons to access GPIO hardware (`setup.sh` now does this automatically for new installs; existing installs should run `sudo usermod -aG gpio ebilal` and restart the service). Without it, you'll see `RuntimeError: No access to /dev/mem`.
+6. `requirements.txt` now installs `rpi-lgpio` instead of `RPi.GPIO`. Plain `RPi.GPIO`'s button support relies on the legacy sysfs GPIO interface, which fails with `RuntimeError: Failed to add edge detection` on current Raspberry Pi kernels (6.6+). `rpi-lgpio` is a drop-in replacement (same `RPi.GPIO` import path) backed by the modern gpiochip interface, and needs no code changes in `ebilal.py` or the `phatbeat` library.
 
 ## Experimental
 A docker image has been setup, usage:

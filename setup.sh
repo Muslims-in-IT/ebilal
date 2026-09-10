@@ -13,6 +13,7 @@ fi
 cd /opt/
 sudo adduser ebilal users
 sudo adduser ebilal audio
+sudo adduser ebilal gpio
 printf "[3/6]⏳   Fetching eBilal code"
 if [ ! -d "ebilal" ]; then
   sudo git clone https://github.com/Muslims-in-IT/ebilal
