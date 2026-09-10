@@ -1,9 +1,23 @@
 paho-mqtt>=1.5.0
 phatbeat>=0.1.1
 pyalsaaudio>=0.9.0
-RPi.GPIO>=0.7.0
+# rpi-lgpio is a drop-in replacement for RPi.GPIO (same "RPi.GPIO" import
+# path) backed by the modern lgpio/gpiochip character-device interface.
+# Plain RPi.GPIO's button edge detection relies on the legacy sysfs GPIO
+# interface, which current Raspberry Pi kernels (6.6+) no longer support
+# reliably, causing "RuntimeError: Failed to add edge detection" for any
+# code (like the phatbeat library) that uses GPIO.add_event_detect.
+rpi-lgpio
 dynaconf>=0.6.0
-fastapi>=0.63.0
+# Pinned to stay on Pydantic v1 (pure Python, no Rust build step). Newer
+# fastapi releases require pydantic>=2.x, which pulls in pydantic-core.
+# On armv6l/armv7l, piwheels' pydantic-core wheels currently fail pip's
+# package-name consistency check (metadata says "pydantic_core" instead of
+# "pydantic-core"), so pip discards every prebuilt wheel and falls back to
+# compiling pydantic-core from source with Rust - which can take 45+ minutes
+# on a Pi Zero/Pi 1 and often exhausts memory. Keep this pin until that
+# piwheels/pip issue is resolved upstream.
+fastapi==0.125.0
 uvicorn==0.16.0
 pyinotify>=0.9.6
 cysystemd>=1.5.2

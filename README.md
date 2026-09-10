@@ -29,6 +29,9 @@ Release notes:
 5. Review the setup script: `cat setup.sh`
 6. Run the steps manually one at a time or if you're comfortable with the script, run it: `bash setup.sh`
 
+### Supported OS / Python version
+This has been verified against **Raspberry Pi OS Bookworm (32-bit, "Legacy")**, which ships Python 3.11. Raspberry Pi OS Trixie (Python 3.13) is not currently supported - if you picked "latest" from the [Raspberry Pi OS downloads page](https://www.raspberrypi.com/software/operating-systems/), choose the Bookworm Legacy image instead.
+
 ## API
 Try the new API here:
 http://ebilal.local:8000/docs  (if hostname is ebilal)
@@ -38,8 +41,82 @@ Visit the alpha web interface by using your browser to visit the IP address of y
 
 ## Optional
 
-If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-pi-zero-w-project-kit):
+If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-pi-zero-w-project-kit) pHAT Beat:
 `curl https://get.pimoroni.com/phatbeat | bash`
+
+**Note:** as of this writing, Pimoroni's installer script fails on current Raspberry Pi OS (Bookworm) for two reasons: it tries to fetch a WiringPi `.deb` from a URL that no longer exists (WiringPi has been discontinued upstream), and its `pip install` step doesn't account for [PEP 668](https://peps.python.org/pep-0668/) ("externally-managed-environment"), which Bookworm enforces by default. The script dies before it reaches the step that enables the I2S DAC, so audio won't work even though it reports partial success. Until the installer is fixed, set it up manually:
+
+1. Add the DAC overlay to `/boot/firmware/config.txt`:
+   ```
+   echo "dtoverlay=hifiberry-dac" | sudo tee -a /boot/firmware/config.txt
+   sudo reboot
+   ```
+2. The pHAT Beat's DAC chip (PCM5102A) has no hardware volume control, so `aplay -l` will show the card but `amixer scontrols` will be empty. Create `/etc/asound.conf` to add a software volume control:
+   ```
+   pcm.hifiberry_out {
+       type hw
+       card sndrpihifiberry
+   }
+   pcm.softvol {
+       type softvol
+       slave.pcm "hifiberry_out"
+       control {
+           name "PCM"
+           card 0
+       }
+       min_dB -51.0
+       max_dB 0.0
+   }
+   pcm.!default {
+       type plug
+       slave.pcm "softvol"
+   }
+   ctl.!default {
+       type hw
+       card 0
+   }
+   ```
+3. The `softvol` control is only registered with ALSA the first time something opens the `default` PCM device, so trigger and persist it once before starting the service:
+   ```
+   speaker-test -D default -c 2 -t sine -f 440 -l 1
+   sudo alsactl store
+   ```
+   This persists the control so `alsa-restore.service` recreates it automatically on every boot, before `ebilal.service` starts.
+4. Set `audio_device="PCM"` in `settings.toml` and set `pimoroni=true` to enable the pHAT Beat's buttons and LEDs.
+5. The `ebilal` user needs to be in the `gpio` group for the LEDs/buttons to access GPIO hardware (`setup.sh` now does this automatically for new installs; existing installs should run `sudo usermod -aG gpio ebilal` and restart the service). Without it, you'll see `RuntimeError: No access to /dev/mem`.
+6. `requirements.txt` now installs `rpi-lgpio` instead of `RPi.GPIO`. Plain `RPi.GPIO`'s button support relies on the legacy sysfs GPIO interface, which fails with `RuntimeError: Failed to add edge detection` on current Raspberry Pi kernels (6.6+). `rpi-lgpio` is a drop-in replacement (same `RPi.GPIO` import path) backed by the modern gpiochip interface, and needs no code changes in `ebilal.py` or the `phatbeat` library.
+
+## Debugging
+
+Common commands for troubleshooting a running install:
+
+**Service status and logs**
+```
+sudo systemctl status ebilal          # is it running, and since when?
+sudo systemctl restart ebilal         # restart after a config or code change
+sudo journalctl -u ebilal.service -n 50 --no-pager       # last 50 log lines
+sudo journalctl -u ebilal.service -f                     # follow logs live
+```
+
+**Finding and testing the sound card**
+```
+aplay -l                              # list all ALSA playback devices
+cat /proc/asound/cards                # simpler card list
+amixer scontrols                      # list mixer controls on the default device
+amixer -c 0 scontrols                 # list mixer controls on a specific card index
+speaker-test -D default -c 2 -t sine -f 440 -l 1   # play a test tone through the default device
+```
+If `aplay -l` doesn't show the card you expect (e.g. a HAT's DAC), check `/boot/firmware/config.txt` for the right `dtoverlay=` line and reboot. If the card shows up but `amixer scontrols` is empty, the DAC has no hardware volume control (common on I2S DACs like the PCM5102A) - see the pHAT Beat section above for the ALSA `softvol` workaround.
+
+**Config reload**
+`ebilal.py` watches `settings.toml` and reloads most settings (mounts, server URL, log level) without a restart. Changes to `audio_device` or `pimoroni` require a full `sudo systemctl restart ebilal` since the mixer and GPIO setup only run once at startup.
+
+**Checking GPIO/button issues (pHAT Beat)**
+```
+groups ebilal                         # confirm ebilal is in the gpio group
+sudo -u ebilal /opt/ebilal/venv/bin/python3 -c "import RPi.GPIO as GPIO; print(GPIO.VERSION)"
+```
+Run the second command from `/opt/ebilal` (`cd /opt/ebilal` first) - some GPIO libraries need to create files in the working directory and will fail with a `PermissionError` if run from a directory `ebilal` doesn't own.
 
 ## Experimental
 A docker image has been setup, usage:

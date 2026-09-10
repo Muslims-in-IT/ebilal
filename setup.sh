@@ -13,6 +13,7 @@ fi
 cd /opt/
 sudo adduser ebilal users
 sudo adduser ebilal audio
+sudo adduser ebilal gpio
 printf "[3/6]⏳   Fetching eBilal code"
 if [ ! -d "ebilal" ]; then
   sudo git clone https://github.com/Muslims-in-IT/ebilal
@@ -25,7 +26,7 @@ sudo su - ebilal << EOF
 cd /opt/ebilal
 python3 -m venv venv
 source venv/bin/activate
-pip3 install --no-cache-dir -r requirements.txt
+pip3 install --no-cache-dir --only-binary=:all: -r requirements.txt
 cp settings_example.toml settings.toml
 EOF
 printf "[5/6]⏳   Setting up eBilal as a service"
