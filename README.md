@@ -86,6 +86,38 @@ If you're using the [pimoroni](https://shop.pimoroni.com/products/pirate-radio-p
 5. The `ebilal` user needs to be in the `gpio` group for the LEDs/buttons to access GPIO hardware (`setup.sh` now does this automatically for new installs; existing installs should run `sudo usermod -aG gpio ebilal` and restart the service). Without it, you'll see `RuntimeError: No access to /dev/mem`.
 6. `requirements.txt` now installs `rpi-lgpio` instead of `RPi.GPIO`. Plain `RPi.GPIO`'s button support relies on the legacy sysfs GPIO interface, which fails with `RuntimeError: Failed to add edge detection` on current Raspberry Pi kernels (6.6+). `rpi-lgpio` is a drop-in replacement (same `RPi.GPIO` import path) backed by the modern gpiochip interface, and needs no code changes in `ebilal.py` or the `phatbeat` library.
 
+## Debugging
+
+Common commands for troubleshooting a running install:
+
+**Service status and logs**
+```
+sudo systemctl status ebilal          # is it running, and since when?
+sudo systemctl restart ebilal         # restart after a config or code change
+sudo journalctl -u ebilal.service -n 50 --no-pager       # last 50 log lines
+sudo journalctl -u ebilal.service -f                     # follow logs live
+```
+
+**Finding and testing the sound card**
+```
+aplay -l                              # list all ALSA playback devices
+cat /proc/asound/cards                # simpler card list
+amixer scontrols                      # list mixer controls on the default device
+amixer -c 0 scontrols                 # list mixer controls on a specific card index
+speaker-test -D default -c 2 -t sine -f 440 -l 1   # play a test tone through the default device
+```
+If `aplay -l` doesn't show the card you expect (e.g. a HAT's DAC), check `/boot/firmware/config.txt` for the right `dtoverlay=` line and reboot. If the card shows up but `amixer scontrols` is empty, the DAC has no hardware volume control (common on I2S DACs like the PCM5102A) - see the pHAT Beat section above for the ALSA `softvol` workaround.
+
+**Config reload**
+`ebilal.py` watches `settings.toml` and reloads most settings (mounts, server URL, log level) without a restart. Changes to `audio_device` or `pimoroni` require a full `sudo systemctl restart ebilal` since the mixer and GPIO setup only run once at startup.
+
+**Checking GPIO/button issues (pHAT Beat)**
+```
+groups ebilal                         # confirm ebilal is in the gpio group
+sudo -u ebilal /opt/ebilal/venv/bin/python3 -c "import RPi.GPIO as GPIO; print(GPIO.VERSION)"
+```
+Run the second command from `/opt/ebilal` (`cd /opt/ebilal` first) - some GPIO libraries need to create files in the working directory and will fail with a `PermissionError` if run from a directory `ebilal` doesn't own.
+
 ## Experimental
 A docker image has been setup, usage:
 `docker run -ti --rm -v /dev/snd:/dev/snd --privileged mitpeople/ebilal_pi0:latest`
