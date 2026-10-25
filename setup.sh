@@ -32,6 +32,8 @@ printf "[5/6]⏳   Setting up eBilal as a service"
 cd /opt/ebilal
 sudo cp other/*.service /lib/systemd/system/
 sudo chmod 644 /lib/systemd/system/ebilal*
+# Allow the service to restart itself for in-app updates (scoped sudoers rule)
+sudo install -m 0440 -o root -g root other/ebilal-sudoers /etc/sudoers.d/ebilal
 sudo systemctl daemon-reload
 sudo systemctl enable ebilal.service
 sudo systemctl start ebilal.service
