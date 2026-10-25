@@ -9,11 +9,9 @@ import logging.config
 from logging.handlers import RotatingFileHandler
 import os
 import subprocess
-import alsaaudio
 import threading
 from dynaconf import LazySettings
 from dynaconf.loaders.toml_loader import write
-import pyinotify
 from cysystemd.journal import JournaldLogHandler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -53,16 +51,10 @@ class LivemasjidClient:
         self.mountToPlay = []
         self.audio_device = ""
         self.playing = ""
+        self.current_url = ""
+        self.volume = 80  # 0-100, applied in the player (ffplay -af volume=)
         self.load_config()
-        if self.audio_device == "":
-            try:
-                self.mixer = alsaaudio.Mixer()
-            except:
-                self.mixer = alsaaudio.Mixer(alsaaudio.mixers()[0])
-        else:
-            self.mixer = alsaaudio.Mixer(self.audio_device)
-        self.current_vol = self.mixer.getvolume()[0]
-    
+
     def load_config(self, reload = False):
         logger.debug("reloading config file")
         settings = LazySettings(settings_file="settings.toml")
@@ -71,6 +63,10 @@ class LivemasjidClient:
         self.mountToPlay = settings.default.mounts
         self.audio_device = settings.default.audio_device
         self.pimoroni = settings.default.pimoroni
+        try:
+            self.volume = int(settings.default.get("volume", self.volume))
+        except Exception:
+            pass
         if (settings.default.loglevel == "DEBUG"):
             logger.setLevel(logging.DEBUG)
         elif (settings.default.loglevel == "INFO"):
@@ -118,12 +114,26 @@ class LivemasjidClient:
 
     def playurl(self,url):
         self.stop()
-        logger.debug("Starting media player")
-        self.process = subprocess.Popen(["ffplay", "-vn", "-nostats", "-autoexit", "-nodisp", url], shell=False)
+        self.current_url = url
+        # ffmpeg volume filter takes a linear gain: 0.0 (mute) .. 1.0 (unity).
+        gain = max(0.0, min(1.0, self.volume / 100.0))
+        logger.debug("Starting media player at volume %s%%", self.volume)
+        self.process = subprocess.Popen(
+            ["ffplay", "-vn", "-nostats", "-loglevel", "error",
+             "-autoexit", "-nodisp", "-af", "volume=%.3f" % gain, url],
+            shell=False)
 
     def stop(self):
         logger.debug("stopping media player")
-        if hasattr(self, 'process'): self.process.kill()
+        if hasattr(self, 'process') and self.process is not None:
+            if self.process.poll() is None:
+                self.process.kill()
+            # Reap the child so it does not linger as a zombie
+            try:
+                self.process.wait(timeout=5)
+            except Exception as e:
+                logger.error("Error reaping player process: %s", e)
+            self.process = None
         self.state["status"] = "stopped"
         self.state["mount"] = ""
 
@@ -147,13 +157,28 @@ class LivemasjidClient:
     def disconnect(self):
         self.client.loop_stop()
     
+    def get_volume(self):
+        return self.volume
+
+    def set_volume(self, v):
+        """Set volume 0-100, persist it, and re-apply live by relaunching the
+        current stream (ffmpeg has no runtime volume control for a live feed)."""
+        self.volume = max(0, min(100, int(v)))
+        try:
+            s = LazySettings(settings_file="settings.toml")
+            s.default.volume = self.volume
+            write('settings.toml', s.to_dict(), merge=True)
+        except Exception as e:
+            logger.error("Could not persist volume: %s", e)
+        if self.state.get("status") == "playing" and self.current_url:
+            self.playurl(self.current_url)
+        return self.volume
+
     def volup(self):
-        self.current_vol = self.mixer.getvolume()[0] + 10
-        self.mixer.setvolume((self.current_vol))
-    
+        return self.set_volume(self.volume + 10)
+
     def voldown(self):
-        self.current_vol =  self.mixer.getvolume()[0] - 10
-        self.mixer.setvolume(self.current_vol)
+        return self.set_volume(self.volume - 10)
 
     def getlivestreams(self):
         return self.livestreams
@@ -185,14 +210,9 @@ app.add_middleware(
 
 settings = LazySettings(settings_file="/opt/ebilal/settings.toml")
 
-if settings.default.audio_device == "":
-    try:
-        mixer = alsaaudio.Mixer()
-    except:
-        mixer = alsaaudio.Mixer(alsaaudio.mixers()[0])
-else:
-    mixer = alsaaudio.Mixer(settings.default.audio_device)
-current_vol = mixer.getvolume()[0]
+# Volume is handled in the player (ffplay -af volume=) via the LivemasjidClient,
+# so it works regardless of the DAC's mixer controls or the service user's ALSA
+# view. See LivemasjidClient.set_volume / get_volume.
 
 @app.get("/favourites")
 def read_mounts():
@@ -205,10 +225,11 @@ class favourites(BaseModel):
 def write_mounts(favourites: favourites):
     settings.default.mounts = favourites.favourites
     write('settings.toml', settings.to_dict() , merge=False)
+    livemasjid.set_mounts(favourites.favourites)
     return {"favourites": settings.default.mounts}
 
 @app.get("/server_url")
-def read_mounts():
+def read_server_url():
     return {"server_url": settings.default.server_url}
 
 @app.post("/server_url/")
@@ -218,27 +239,20 @@ def write_url(url: str):
     return {"server_url": settings.default.server_url}
 
 @app.get("/volume")
-def read_root():
-    return {"volume": mixer.getvolume()[0]}
+def read_volume():
+    return {"volume": livemasjid.get_volume()}
 
 @app.post("/volume")
 def volset(volume:int):
-    mixer.setvolume(volume)
-    return {"volume": mixer.getvolume()[0]}
+    return {"volume": livemasjid.set_volume(volume)}
 
 @app.post("/volume/up")
 def volup():
-    if (mixer.getvolume()[0] <= 90):
-        current_vol = mixer.getvolume()[0] + 10
-        mixer.setvolume(current_vol)
-    return {"volume": mixer.getvolume()[0]}
+    return {"volume": livemasjid.volup()}
 
 @app.post("/volume/down")
-def volup():
-    if (mixer.getvolume()[0] >= 10):
-        current_vol = mixer.getvolume()[0] - 10
-        mixer.setvolume(current_vol)
-    return {"volume": mixer.getvolume()[0]}
+def voldown():
+    return {"volume": livemasjid.voldown()}
 
 @app.get("/player/play/{mount}")
 def play(mount:str):
@@ -315,13 +329,12 @@ def main():
             os.system("sudo shutdown -h now")
 
     #Start the API
-    uvicorn.run("ebilal:app",host='0.0.0.0', port=8000, reload=True)
+    # NOTE: reload=True spawns a filesystem watcher that pegs the Pi Zero's
+    # single core at ~85% CPU. It is a dev-only feature and must stay off in
+    # production. The code below uvicorn.run was unreachable dead code (uvicorn
+    # blocks), so it has been removed; config is reloaded via load_config().
+    uvicorn.run(app, host='0.0.0.0', port=8000)
 
-    # Watch for changes in the settings file
-    wm = pyinotify.WatchManager()
-    wm.add_watch('settings.toml', pyinotify.IN_MODIFY, livemasjid.load_config(reload=True))
-    notifier = pyinotify.Notifier(wm)
-    notifier.loop()
 
 if __name__ == "__main__":
     main()
