@@ -271,6 +271,35 @@ function setFilter(f) {
   renderStations();
 }
 
+/* ---------- Settings panel ---------- */
+function toggleSettings() {
+  const overlay = $("settings-overlay");
+  const gear = $("gear-btn");
+  const opening = overlay.hidden;
+  overlay.hidden = !opening;
+  gear.setAttribute("aria-expanded", opening ? "true" : "false");
+  if (opening) {
+    getLog();
+    getVersion();
+  }
+}
+
+function getVersion() {
+  fetch(apiurl + "version")
+    .then((r) => r.json())
+    .then((obj) => {
+      $("version").textContent = obj.version || "unknown";
+    })
+    .catch(() => {
+      $("version").textContent = "unknown";
+    });
+}
+
+// Close settings on Escape
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !$("settings-overlay").hidden) toggleSettings();
+});
+
 /* ---------- Logs ---------- */
 function getLog() {
   fetch("/web.log")

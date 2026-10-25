@@ -24,9 +24,16 @@
       <span class="brand-mark">◉</span>
       <span class="brand-text">eBilal</span>
     </a>
-    <div class="status-pill" id="status-pill">
-      <span class="dot" id="status-dot"></span>
-      <span id="status">connecting…</span>
+    <div class="topbar-right">
+      <div class="status-pill" id="status-pill">
+        <span class="dot" id="status-dot"></span>
+        <span id="status">connecting…</span>
+      </div>
+      <button class="gear-btn" id="gear-btn" onclick="toggleSettings()" aria-label="Settings" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm8.94 4a7 7 0 0 0-.1-1.13l2.03-1.58-2-3.46-2.39.96a7 7 0 0 0-1.96-1.13L15.5 2h-4l-.98 2.63a7 7 0 0 0-1.96 1.13l-2.39-.96-2 3.46 2.03 1.58a7.1 7.1 0 0 0 0 2.26L2.17 15.2l2 3.46 2.39-.96c.59.47 1.25.85 1.96 1.13L9.5 22h4l.98-2.63a7 7 0 0 0 1.96-1.13l2.39.96 2-3.46-2.03-1.58c.06-.37.1-.75.1-1.13z"/>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -86,13 +93,33 @@
       </div>
     </section>
 
-    <!-- Logs (collapsible, tucked away) -->
-    <section class="card logs-card">
-      <details>
-        <summary>Diagnostics</summary>
-        <textarea id="log" rows="6" readonly spellcheck="false"></textarea>
-      </details>
-    </section>
+    <!-- Settings panel content is in the overlay below -->
+  </main>
+
+  <!-- Settings overlay (top-level menu) -->
+  <div class="settings-overlay" id="settings-overlay" hidden onclick="if(event.target===this)toggleSettings()">
+    <aside class="settings-panel" role="dialog" aria-label="Settings" aria-modal="true">
+      <div class="settings-head">
+        <h2>Settings</h2>
+        <button class="close-btn" onclick="toggleSettings()" aria-label="Close settings">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M18.3 5.7L12 12l6.3 6.3-1.4 1.4L10.6 13.4 4.3 19.7 2.9 18.3 9.2 12 2.9 5.7l1.4-1.4L10.6 10.6l6.3-6.3z"/></svg>
+        </button>
+      </div>
+
+      <div class="setting-block">
+        <div class="setting-label">About</div>
+        <div class="about-row">
+          <span>Version</span>
+          <span id="version" class="mono">—</span>
+        </div>
+      </div>
+
+      <div class="setting-block">
+        <div class="setting-label">Diagnostics</div>
+        <textarea id="log" rows="8" readonly spellcheck="false"></textarea>
+      </div>
+    </aside>
+  </div>
 
   </main>
 

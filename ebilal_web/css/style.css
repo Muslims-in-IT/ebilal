@@ -89,6 +89,28 @@ body {
   letter-spacing: 0.5px;
 }
 
+.topbar-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.gear-btn {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--card-border);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--ink-soft);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: color 0.15s, transform 0.2s, border-color 0.15s;
+}
+.gear-btn:hover { color: var(--accent); border-color: var(--accent); }
+.gear-btn[aria-expanded="true"] svg { transform: rotate(60deg); }
+.gear-btn svg { fill: currentColor; transition: transform 0.3s; }
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -141,6 +163,7 @@ body {
 }
 
 /* ---------- Now playing ---------- */
+.now-playing[hidden], .empty[hidden] { display: none; }
 .now-playing {
   display: flex;
   align-items: center;
@@ -376,23 +399,83 @@ input[type="range"]::-moz-range-thumb {
   font-style: italic;
 }
 
-/* ---------- Logs ---------- */
-.logs-card { padding: 10px 16px; }
-.logs-card summary {
-  cursor: pointer;
-  font-size: 13px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  list-style: none;
-  padding: 6px 0;
+/* ---------- Settings overlay (top-level menu) ---------- */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(20, 16, 12, 0.5);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: flex-end;
+  animation: fade 0.2s ease;
 }
-.logs-card summary::-webkit-details-marker { display: none; }
-.logs-card summary::before { content: "▸ "; color: var(--gold); }
-.logs-card details[open] summary::before { content: "▾ "; }
+/* The [hidden] attribute must win over display:flex above, or the panel
+   can never be closed. */
+.settings-overlay[hidden] { display: none; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.settings-panel {
+  width: min(420px, 90vw);
+  height: 100%;
+  overflow-y: auto;
+  background: var(--card);
+  border-left: 1px solid var(--card-border);
+  box-shadow: -12px 0 32px rgba(0, 0, 0, 0.25);
+  padding: 20px clamp(16px, 4vw, 26px) 30px;
+  animation: slidein 0.25s ease;
+}
+@keyframes slidein { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .settings-overlay, .settings-panel { animation: none; }
+}
+.settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.settings-head h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  font-size: 28px;
+  color: var(--ink);
+}
+.close-btn {
+  display: grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.close-btn:hover { background: var(--accent-soft); color: var(--accent); }
+.close-btn svg { fill: currentColor; }
+
+.setting-block { margin-bottom: 22px; }
+.setting-label {
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.about-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-2);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  color: var(--ink-soft);
+}
+.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink); }
+
 #log {
   width: 100%;
-  margin-top: 10px;
   padding: 10px;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12px;
