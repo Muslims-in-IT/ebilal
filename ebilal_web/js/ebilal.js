@@ -166,7 +166,7 @@ function mountFromListenUrl(url) {
 
 function prettyName(mount) {
   const m = livemounts.find((x) => mountFromListenUrl(x.listenurl) === mount);
-  return m ? m.server_name : null;
+  return m ? cleanName(m.server_name, mount) : null;
 }
 
 function getLiveStreams() {
@@ -175,6 +175,20 @@ function getLiveStreams() {
     .then((obj) => {
       let src = (obj.icestats && obj.icestats.source) || [];
       if (!Array.isArray(src)) src = [src]; // Icecast returns an object when only one source
+
+      // Livemasjid publishes a secondary ".mp3" transcode mount alongside each
+      // primary stream. These duplicates carry no real name ("Unspecified name"
+      // or "/mount.mp3"), so hide them when the primary mount is also live.
+      const mounts = src.map((m) => mountFromListenUrl(m.listenurl));
+      src = src.filter((m) => {
+        const mount = mountFromListenUrl(m.listenurl);
+        if (mount.endsWith(".mp3")) {
+          const primary = mount.slice(0, -4);
+          if (mounts.includes(primary)) return false; // primary exists, drop the .mp3 twin
+        }
+        return true;
+      });
+
       livemounts = src;
       renderStations();
       renderNowPlaying();
@@ -184,6 +198,16 @@ function getLiveStreams() {
       livemounts = [];
       renderStations();
     });
+}
+
+// Tidy a station name: Icecast often returns leading slashes, extra spaces,
+// or the literal "Unspecified name" placeholder.
+function cleanName(raw, mount) {
+  let n = (raw || "").trim();
+  if (!n || n === "Unspecified name" || n === "/" + mount || n === mount) {
+    return mount; // fall back to the mount id, which is at least meaningful
+  }
+  return n.replace(/^\/+/, "").trim();
 }
 
 /* ---------- Render station list ---------- */
@@ -216,7 +240,7 @@ function renderStations() {
       const isPlaying = state.status === "playing" && state.mount === mount;
       const isFav = favourites.includes(mount);
       const desc = (m.server_description || "").replace(/</g, "&lt;");
-      const name = (m.server_name || mount).replace(/</g, "&lt;");
+      const name = cleanName(m.server_name, mount).replace(/</g, "&lt;");
       const extUrl = m.server_url ? (m.server_url.startsWith("http") ? m.server_url : "https://" + m.server_url) : "#";
       return `
       <div class="station${isPlaying ? " is-playing" : ""}">
