@@ -10,6 +10,7 @@ from logging.handlers import RotatingFileHandler
 import os
 import subprocess
 import threading
+import urllib.request
 from dynaconf import LazySettings
 from dynaconf.loaders.toml_loader import write
 from cysystemd.journal import JournaldLogHandler
@@ -253,6 +254,107 @@ def volup():
 @app.post("/volume/down")
 def voldown():
     return {"volume": livemasjid.voldown()}
+
+
+# ---------------------------------------------------------------------------
+# Software updates (GitHub Releases)
+# ---------------------------------------------------------------------------
+APP_DIR = "/opt/ebilal"
+GITHUB_REPO = "Muslims-in-IT/ebilal"
+RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+
+
+def _git(*args, timeout=60):
+    return subprocess.run(
+        ["git", "-C", APP_DIR, *args],
+        capture_output=True, text=True, timeout=timeout,
+    )
+
+
+def current_version():
+    """Installed version from git describe; falls back to the short SHA."""
+    r = _git("describe", "--tags", "--always")
+    return r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else "unknown"
+
+
+def latest_release():
+    """Fetch the latest release tag + notes from GitHub. Returns dict or None."""
+    try:
+        req = urllib.request.Request(
+            RELEASES_API,
+            headers={"Accept": "application/vnd.github+json", "User-Agent": "ebilal"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+        return {
+            "tag": data.get("tag_name"),
+            "name": data.get("name"),
+            "notes": data.get("body", ""),
+            "url": data.get("html_url"),
+            "published_at": data.get("published_at"),
+        }
+    except Exception as e:
+        logger.error("Could not fetch latest release: %s", e)
+        return None
+
+
+@app.get("/version")
+def get_version():
+    return {"version": current_version()}
+
+
+@app.get("/update/check")
+def update_check():
+    cur = current_version()
+    latest = latest_release()
+    if not latest or not latest.get("tag"):
+        return {"current": cur, "latest": None, "update_available": False,
+                "error": "Could not reach GitHub."}
+    available = latest["tag"] != cur
+    return {
+        "current": cur,
+        "latest": latest["tag"],
+        "update_available": available,
+        "name": latest.get("name"),
+        "notes": latest.get("notes"),
+        "url": latest.get("url"),
+    }
+
+
+def _do_update(tag):
+    """Fetch and check out the given release tag, refresh deps, then restart.
+    Runs detached so the HTTP response returns before the service restarts."""
+    script = f"""
+set -e
+cd {APP_DIR}
+git fetch --tags --prune origin
+git reset --hard {tag}
+if [ -f venv/bin/pip ]; then
+  venv/bin/pip install --no-cache-dir -r requirements.txt || true
+fi
+sudo systemctl restart ebilal.service
+"""
+    # nohup so the restart (which kills us) does not abort mid-script
+    subprocess.Popen(
+        ["nohup", "bash", "-c", script],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+
+
+@app.post("/update/apply")
+def update_apply():
+    latest = latest_release()
+    if not latest or not latest.get("tag"):
+        return {"ok": False, "error": "Could not reach GitHub."}
+    tag = latest["tag"]
+    if tag == current_version():
+        return {"ok": False, "error": "Already on the latest version.", "version": tag}
+    logger.info("Applying update to %s", tag)
+    _do_update(tag)
+    return {"ok": True, "updating_to": tag,
+            "message": "Update started. eBilal will restart shortly."}
+
 
 @app.get("/player/play/{mount}")
 def play(mount:str):
