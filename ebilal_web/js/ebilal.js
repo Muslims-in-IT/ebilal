@@ -211,10 +211,9 @@ function cleanName(raw, mount) {
 }
 
 /* ---------- Render station list ---------- */
-const svgPlay = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M8 5v14l11-7z"/></svg>';
-const svgStop = '<svg viewBox="0 0 24 24" width="18" height="18"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>';
-const svgHeart = '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 20.3l-1.45-1.32C5.4 14.36 2 11.28 2 7.5 2 4.42 4.42 2 7.5 2c1.74 0 3.41.81 4.5 2.09C13.09 2.81 14.76 2 16.5 2 19.58 2 22 4.42 22 7.5c0 3.78-3.4 6.86-8.55 11.54L12 20.3z"/></svg>';
-const svgLink = '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14V3zM5 5h5v2H5v12h12v-5h2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>';
+function icon(name, cls) {
+  return `<span class="material-symbols-rounded${cls ? " " + cls : ""}">${name}</span>`;
+}
 
 function renderStations() {
   const host = $("livemounts");
@@ -246,7 +245,7 @@ function renderStations() {
       <div class="station${isPlaying ? " is-playing" : ""}">
         <button class="station-play" onclick="togglePlay('${mount}')"
           aria-label="${isPlaying ? "Stop" : "Play"} ${name}">
-          ${isPlaying ? svgStop : svgPlay}
+          ${icon(isPlaying ? "stop" : "play_arrow")}
         </button>
         <div class="station-info">
           <div class="station-name">${name}</div>
@@ -255,8 +254,8 @@ function renderStations() {
         </div>
         <div class="station-actions">
           <button class="icon-btn${isFav ? " fav-on" : ""}" onclick="toggleFav('${mount}')"
-            aria-label="${isFav ? "Remove from" : "Add to"} favourites">${svgHeart}</button>
-          <a class="icon-btn" href="${extUrl}" target="_blank" rel="noopener" aria-label="Open stream page">${svgLink}</a>
+            aria-label="${isFav ? "Remove from" : "Add to"} favourites">${icon("favorite", isFav ? "fill" : "")}</button>
+          <a class="icon-btn" href="${extUrl}" target="_blank" rel="noopener" aria-label="Open stream page">${icon("open_in_new")}</a>
         </div>
       </div>`;
     })
@@ -293,6 +292,82 @@ function getVersion() {
     .catch(() => {
       $("version").textContent = "unknown";
     });
+}
+
+function checkUpdate() {
+  const status = $("update-status");
+  const notes = $("update-notes");
+  const upgrade = $("btn-upgrade");
+  const warn = $("update-warn");
+  const check = $("btn-check");
+  status.textContent = "Checking…";
+  notes.hidden = true;
+  upgrade.hidden = true;
+  warn.hidden = true;
+  check.disabled = true;
+  fetch(apiurl + "update/check")
+    .then((r) => r.json())
+    .then((d) => {
+      check.disabled = false;
+      $("version").textContent = d.current || "unknown";
+      if (d.error) {
+        status.textContent = d.error;
+        return;
+      }
+      if (d.update_available) {
+        status.textContent = `Update available: ${d.latest} (installed: ${d.current})`;
+        if (d.notes) {
+          notes.textContent = d.notes;
+          notes.hidden = false;
+        }
+        upgrade.textContent = `Upgrade to ${d.latest}`;
+        upgrade.hidden = false;
+        warn.hidden = false;
+      } else {
+        status.textContent = `You are on the latest version (${d.current}).`;
+      }
+    })
+    .catch(() => {
+      check.disabled = false;
+      status.textContent = "Could not check for updates.";
+    });
+}
+
+function applyUpdate() {
+  if (!confirm("Upgrade eBilal now?\n\nThis pulls the latest release and restarts the player. Playback will stop for a few seconds. Do not power off the Pi during the update.")) {
+    return;
+  }
+  const status = $("update-status");
+  const upgrade = $("btn-upgrade");
+  upgrade.disabled = true;
+  status.textContent = "Upgrading… eBilal will restart shortly.";
+  fetch(apiurl + "update/apply", { method: "POST" })
+    .then((r) => r.json())
+    .then((d) => {
+      if (d.ok) {
+        status.textContent = `Upgrading to ${d.updating_to}. Reconnecting…`;
+        // Poll until the service is back, then reload.
+        setTimeout(pollBack, 8000);
+      } else {
+        upgrade.disabled = false;
+        status.textContent = d.error || "Upgrade failed.";
+      }
+    })
+    .catch(() => {
+      // The restart kills the connection mid-request; treat as "in progress".
+      status.textContent = "Restarting… reconnecting…";
+      setTimeout(pollBack, 8000);
+    });
+}
+
+function pollBack() {
+  fetch(apiurl + "version", { cache: "no-store" })
+    .then((r) => r.json())
+    .then((d) => {
+      $("update-status").textContent = `Updated to ${d.version}. Reloading…`;
+      setTimeout(() => location.reload(), 1500);
+    })
+    .catch(() => setTimeout(pollBack, 4000));
 }
 
 // Close settings on Escape

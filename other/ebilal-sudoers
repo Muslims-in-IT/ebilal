@@ -1,0 +1,6 @@
+# Allow the ebilal service user to restart its own service without a password.
+# This is required for the in-app "check for updates / upgrade" feature, which
+# pulls the latest release and then restarts the service to apply it.
+# Install to /etc/sudoers.d/ebilal with mode 0440:
+#   sudo install -m 0440 other/ebilal-sudoers /etc/sudoers.d/ebilal
+ebilal ALL=(root) NOPASSWD: /bin/systemctl restart ebilal.service, /usr/bin/systemctl restart ebilal.service
