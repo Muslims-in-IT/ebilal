@@ -5,133 +5,102 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="theme-color" content="#2A2622">
   <title>eBilal</title>
+  <link rel="icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=EB+Garamond:ital@0;1&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-  <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
 </head>
 
 <body>
-  <nav class="navbar" role="navigation" aria-label="main navigation">
-    <div class="navbar-brand">
-      <a class="navbar-item" href="https://livemasjid.com">
-        <img src="https://www.livemasjid.com/images/livemasjid_icon_small.jpg" width="50" height="50">
-      </a>
+  <div class="wash"></div>
 
-      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
-        <span aria-hidden="true"></span>
-        <span aria-hidden="true"></span>
-        <span aria-hidden="true"></span>
-      </a>
+  <header class="topbar">
+    <a class="brand" href="https://livemasjid.com" title="Powered by Livemasjid">
+      <span class="brand-mark">◉</span>
+      <span class="brand-text">eBilal</span>
+    </a>
+    <div class="status-pill" id="status-pill">
+      <span class="dot" id="status-dot"></span>
+      <span id="status">connecting…</span>
     </div>
+  </header>
 
-    <div id="navbarBasicExample" class="navbar-menu">
-      <div class="navbar-start">
-        <a class="navbar-item" href="/">
-          Home
-        </a>
+  <main class="container">
 
-        <a class="navbar-item" href="/api/docs/">
-          Documentation
-        </a>
-
-        <div class="navbar-end">
-          <div class="navbar-item">
-          </div>
-        </div>
+    <!-- Now playing -->
+    <section class="now-playing card" id="now-playing" hidden>
+      <div class="np-left">
+        <div class="np-eq" id="np-eq"><span></span><span></span><span></span><span></span></div>
       </div>
-  </nav>
-  <div class="container">
-
-  <div class="ticker-wrap">
-    <div class="ticker">
-      <div class="ticker__item">Livemasjid Player: </div>
-      <div class="ticker__item" id="status"></div>
-    </div>
-  </div>
-
-  <div class="tabs is-centered is-boxed" id="tabs">
-    <ul>
-      <li class="is-active" data-tab="1">
-        <a>
-          <span class="icon is-small"><i class="fa fa-cog"></i></span>
-          <span>Settings</span>
-        </a>
-      </li>
-      <li data-tab="2">
-        <a>
-          <span class="icon is-small"><i class="fa fa-music"></i></span>
-          <span>Live</span>
-        </a>
-      </li>
-    </ul>
-  </div>
-
-  <div id="tab-content">
-    <div class = "is-active" data-content="1">
-      <div class="card">
-        <div class="card-content">
-          <div class="content">
-            Current config on eBilal.
-            <a style="float:right">
-              <span class="icon is-small"><i onclick="init()" class="fas fa-sync"></i></span>
-              <span>Refresh</span>
-            </a>
-            <div class="columns">
-              <div class="column">
-                <form class="box">
-                  <div class="field">
-                    <label class="label">Favourites</label>
-                    <div class="control">
-                      <input class="input" id="favourites" placeholder="e.g. activestream">
-                    </div>
-                  </div>
-                  <button class="button is-primary"onclick="setTheFavs(this.form)">Update</button>
-                </form>
-                <div class="box">
-                  <div class="field">
-                    <label class="label">Logs</label>
-                    <div class="control">
-                      <textarea id='log' rows=5 class="textarea"></textarea>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="column">
-                <form class="box">
-                  <div class="field">
-                    <label class="label">Volume</label>
-                    <div class="control">
-                      <input class="input" id="volume">
-                    </div>
-                  </div>
-                  <button class="button is-primary" onclick="setTheVolume(this.form)">Update</button>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-        <footer class="card-footer"></footer>
+      <div class="np-body">
+        <div class="np-label">Now playing</div>
+        <div class="np-mount" id="np-mount">—</div>
       </div>
-    </div>
-    <div class="is-inactive" data-content="2">
-      <div class="card">
-        <div class="card-content">
-          <div class="content">
-            Live streams
-            <a style="float:right">
-              <span class="icon is-small"><i onclick="init()" class="fas fa-sync"></i></span>
-              <span>Refresh</span>
-            </a>
-            <div class="columns">
-              <div class="column" id="livemounts">
-              </div>
-            </div>
-          </div>
-        </div>
+      <button class="np-stop" id="np-stop" onclick="stop()" aria-label="Stop playback">
+        <svg viewBox="0 0 24 24" width="22" height="22"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+      </button>
+    </section>
+
+    <!-- Volume -->
+    <section class="card volume-card">
+      <div class="rule"></div>
+      <div class="vol-row">
+        <svg class="vol-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path d="M3 9v6h4l5 5V4L7 9H3z"/>
+        </svg>
+        <input type="range" id="volume" min="0" max="100" step="1" value="50"
+          oninput="onVolumeInput(this.value)" onchange="setVolume(this.value)" aria-label="Volume">
+        <span class="vol-val" id="vol-val">50</span>
       </div>
-    </div>
-  </div>
-</div>
+    </section>
+
+    <!-- Stations -->
+    <section class="stations">
+      <div class="section-head">
+        <h2>Live streams</h2>
+        <button class="refresh" onclick="init()" aria-label="Refresh">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M17.65 6.35A8 8 0 1 0 19.73 14h-2.08A6 6 0 1 1 16.24 7.76L13 11h7V4l-2.35 2.35z"/>
+          </svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <div class="filter-row">
+        <button class="chip is-active" id="chip-all" onclick="setFilter('all')">All</button>
+        <button class="chip" id="chip-fav" onclick="setFilter('fav')">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M12 20.3l-1.45-1.32C5.4 14.36 2 11.28 2 7.5 2 4.42 4.42 2 7.5 2c1.74 0 3.41.81 4.5 2.09C13.09 2.81 14.76 2 16.5 2 19.58 2 22 4.42 22 7.5c0 3.78-3.4 6.86-8.55 11.54L12 20.3z"/></svg>
+          Favourites
+        </button>
+      </div>
+
+      <div id="livemounts" class="station-list"></div>
+      <div id="empty-state" class="empty" hidden>
+        <div class="rule"></div>
+        <p id="empty-text">No live streams right now.</p>
+      </div>
+    </section>
+
+    <!-- Logs (collapsible, tucked away) -->
+    <section class="card logs-card">
+      <details>
+        <summary>Diagnostics</summary>
+        <textarea id="log" rows="6" readonly spellcheck="false"></textarea>
+      </details>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <a href="https://livemasjid.com">Streams by Livemasjid</a>
+  </footer>
+
   <script src="js/ebilal.js"></script>
 </body>
+
+</html>
