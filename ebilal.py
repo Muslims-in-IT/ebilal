@@ -13,7 +13,6 @@ import alsaaudio
 import threading
 from dynaconf import LazySettings
 from dynaconf.loaders.toml_loader import write
-import pyinotify
 from cysystemd.journal import JournaldLogHandler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -123,7 +122,15 @@ class LivemasjidClient:
 
     def stop(self):
         logger.debug("stopping media player")
-        if hasattr(self, 'process'): self.process.kill()
+        if hasattr(self, 'process') and self.process is not None:
+            if self.process.poll() is None:
+                self.process.kill()
+            # Reap the child so it does not linger as a zombie
+            try:
+                self.process.wait(timeout=5)
+            except Exception as e:
+                logger.error("Error reaping player process: %s", e)
+            self.process = None
         self.state["status"] = "stopped"
         self.state["mount"] = ""
 
@@ -315,13 +322,12 @@ def main():
             os.system("sudo shutdown -h now")
 
     #Start the API
-    uvicorn.run("ebilal:app",host='0.0.0.0', port=8000, reload=True)
+    # NOTE: reload=True spawns a filesystem watcher that pegs the Pi Zero's
+    # single core at ~85% CPU. It is a dev-only feature and must stay off in
+    # production. The code below uvicorn.run was unreachable dead code (uvicorn
+    # blocks), so it has been removed; config is reloaded via load_config().
+    uvicorn.run(app, host='0.0.0.0', port=8000)
 
-    # Watch for changes in the settings file
-    wm = pyinotify.WatchManager()
-    wm.add_watch('settings.toml', pyinotify.IN_MODIFY, livemasjid.load_config(reload=True))
-    notifier = pyinotify.Notifier(wm)
-    notifier.loop()
 
 if __name__ == "__main__":
     main()
