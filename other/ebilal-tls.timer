@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily check of eBilal's local HTTPS certificate
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=1d
+RandomizedDelaySec=1h
+
+[Install]
+WantedBy=timers.target
