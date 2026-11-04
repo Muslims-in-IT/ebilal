@@ -6,8 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <meta name="theme-color" content="#2A2622">
+  <meta name="description" content="Control your eBilal masjid radio: Livemasjid live streams, favourites and Quraan recitation.">
+  <!-- PWA: installable on Android/Chrome/desktop via the manifest, on iOS via these tags -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="eBilal">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <title>eBilal</title>
-  <link rel="icon" href="favicon.ico">
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -24,7 +33,7 @@
 
   <header class="topbar">
     <a class="brand" href="https://livemasjid.com" title="Powered by Livemasjid">
-      <span class="brand-mark">◉</span>
+      <img class="brand-mark" src="icons/radio.svg" alt="" width="30" height="30">
       <span class="brand-text">eBilal</span>
     </a>
     <div class="topbar-right">
@@ -37,6 +46,21 @@
       </button>
     </div>
   </header>
+
+  <!-- Shown when the Pi cannot be reached -->
+  <div class="offline-banner" id="offline-banner" role="status" hidden>
+    <span class="material-symbols-rounded" aria-hidden="true">cloud_off</span>
+    <span>Can't reach eBilal. Check it is powered on and you are on the same Wi-Fi.</span>
+  </div>
+
+  <!-- Shown over plain HTTP until this device trusts eBilal's certificate -->
+  <div class="secure-hint" id="secure-hint" role="note" hidden>
+    <span class="material-symbols-rounded" aria-hidden="true">lock_open</span>
+    <a href="/trust.html">Remove the "Not secure" warning and install the app</a>
+    <button class="icon-btn" onclick="dismissSecureHint()" aria-label="Dismiss">
+      <span class="material-symbols-rounded">close</span>
+    </button>
+  </div>
 
   <main class="container">
 
@@ -65,23 +89,50 @@
       </div>
     </section>
 
-    <!-- Stations -->
+    <!-- 1. Pinned: arranges the web UI only, any feed can be pinned or unpinned -->
+    <section class="stations pinned-section" id="pinned-section" hidden>
+      <div class="section-head">
+        <h2>Pinned</h2>
+      </div>
+      <div id="pinned-mounts" class="station-list"></div>
+    </section>
+
+    <!-- 2. Autoplay: feeds eBilal plays by itself when they go live (pinned ones too) -->
+    <section class="stations autoplay-section">
+      <div class="section-head">
+        <h2>Autoplay</h2>
+        <span class="section-note">plays on eBilal when live</span>
+      </div>
+      <div id="autoplay-mounts" class="station-list"></div>
+      <div id="autoplay-empty" class="empty" hidden>
+        <p>Tap <span class="material-symbols-rounded inline-icon" aria-hidden="true">autoplay</span> on any stream
+          and eBilal will play it automatically whenever it goes live.</p>
+      </div>
+    </section>
+
+    <!-- 3. Everything else -->
     <section class="stations">
       <div class="section-head">
-        <h2>Live streams</h2>
+        <h2>All streams</h2>
         <button class="refresh" onclick="init()" aria-label="Refresh">
           <span class="material-symbols-rounded">refresh</span>
           <span>Refresh</span>
         </button>
       </div>
 
-      <div class="filter-row">
-        <button class="chip is-active" id="chip-all" onclick="setFilter('all')">All</button>
-        <button class="chip" id="chip-fav" onclick="setFilter('fav')">
-          <span class="material-symbols-rounded">favorite</span>
-          Favourites
+      <div class="filter-row" role="group" aria-label="Show streams">
+        <button class="chip is-active" id="chip-online" data-filter="online" aria-pressed="true">
+          <span class="dot is-live" aria-hidden="true"></span> Online <span class="chip-count" id="count-online"></span>
+        </button>
+        <button class="chip" id="chip-offline" data-filter="offline" aria-pressed="false">
+          Offline <span class="chip-count" id="count-offline"></span>
+        </button>
+        <button class="chip" id="chip-all" data-filter="all" aria-pressed="false">
+          All <span class="chip-count" id="count-all"></span>
         </button>
       </div>
+      <input type="search" id="stream-search" class="search" placeholder="Search streams" aria-label="Search streams"
+        autocomplete="off" spellcheck="false">
 
       <div id="livemounts" class="station-list"></div>
       <div id="empty-state" class="empty" hidden>
@@ -111,6 +162,14 @@
         </div>
       </div>
 
+      <div class="setting-block" id="install-block" hidden>
+        <div class="setting-label">Install app</div>
+        <p class="update-status" id="install-text">Add eBilal to your home screen for one-tap access.</p>
+        <div class="update-actions">
+          <button class="btn btn-primary" id="btn-install" onclick="installApp()" hidden>Install eBilal</button>
+        </div>
+      </div>
+
       <div class="setting-block">
         <div class="setting-label">Software updates</div>
         <div id="update-box" class="update-box">
@@ -133,8 +192,6 @@
       </div>
     </aside>
   </div>
-
-  </main>
 
   <footer class="footer">
     <a href="https://livemasjid.com">Streams by Livemasjid</a>

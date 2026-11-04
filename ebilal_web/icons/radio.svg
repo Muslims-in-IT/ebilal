@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="eBilal">
+<line x1="68" y1="36" x2="83" y2="13" stroke="#D4AF59" stroke-width="3.2" stroke-linecap="round"/>
+<circle cx="83" cy="13" r="3.6" fill="#4FD1C5"/>
+<rect x="12" y="34" width="76" height="48" rx="9" fill="#D4AF59"/>
+<rect x="20" y="82" width="8" height="5" fill="#D4AF59"/>
+<rect x="72" y="82" width="8" height="5" fill="#D4AF59"/>
+<circle cx="35" cy="58" r="15.5" fill="#2A2622"/>
+<circle cx="35" cy="58" r="10.5" fill="none" stroke="#4FD1C5" stroke-width="2.6"/>
+<circle cx="35" cy="58" r="4" fill="#4FD1C5"/>
+<rect x="55" y="43" width="26" height="13" rx="3" fill="#FBF7EA"/>
+<line x1="59" y1="52" x2="77" y2="52" stroke="#D4AF59" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="67" y1="45" x2="67" y2="55" stroke="#4FD1C5" stroke-width="2.2" stroke-linecap="round"/>
+<circle cx="61" cy="69.5" r="5" fill="#2A2622"/>
+<circle cx="75" cy="69.5" r="5" fill="#2A2622"/>
+</svg>

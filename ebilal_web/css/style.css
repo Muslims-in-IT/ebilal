@@ -87,9 +87,9 @@ body {
   color: var(--ink);
 }
 .brand-mark {
-  color: var(--gold);
-  font-size: 20px;
-  line-height: 1;
+  width: 30px;
+  height: 30px;
+  display: block;
 }
 .brand-text {
   font-family: 'Cormorant Garamond', serif;
@@ -400,6 +400,70 @@ input[type="range"]::-moz-range-thumb {
 .icon-btn .material-symbols-rounded { color: currentColor; font-size: 22px; }
 .icon-btn.fav-on { color: var(--danger); }
 .icon-btn.fav-on .material-symbols-rounded { color: var(--danger); }
+
+/* ---------- Pinned feeds ---------- */
+.section-note { font-size: 14px; font-style: italic; color: var(--ink-soft); }
+.autoplay-section { margin-bottom: 18px; }
+.autoplay-section .empty { padding: 14px 16px; }
+.inline-icon { font-size: 18px !important; vertical-align: -3px; color: var(--accent); }
+.icon-btn.auto-on, .icon-btn.auto-on .material-symbols-rounded { color: var(--accent); }
+.chip .dot { width: 7px; height: 7px; box-shadow: none; }
+.chip-count { font-size: 13px; opacity: 0.7; }
+.chip-count:empty { display: none; }
+.search {
+  width: 100%;
+  margin: 2px 0 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px; /* 16px stops iOS zooming in on focus */
+}
+.search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.pinned-section[hidden] { display: none; }
+.pinned-section { margin-bottom: 18px; }
+.pinned-section .station { border-color: var(--gold); }
+.pinned-section .station.is-playing { box-shadow: 0 0 0 1px var(--gold), var(--shadow); }
+.station.is-offline { opacity: 0.6; }
+.station.is-offline .station-play { background: var(--card-border); cursor: not-allowed; }
+.station.is-offline .station-play:hover { transform: none; filter: none; }
+.station-state { font-size: 12px; color: var(--ink-soft); font-style: italic; }
+.icon-btn.pin-on, .icon-btn.pin-on .material-symbols-rounded { color: var(--gold); }
+
+/* ---------- "Set up HTTPS" hint ---------- */
+.secure-hint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto 6px;
+  max-width: 640px;
+  padding: 6px 8px 6px 16px;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  background: var(--card);
+  font-size: 15px;
+}
+.secure-hint[hidden] { display: none; }
+.secure-hint a { color: var(--accent); flex: 1; }
+.secure-hint .material-symbols-rounded { color: var(--gold); }
+.secure-hint .icon-btn .material-symbols-rounded { color: var(--ink-soft); }
+
+/* ---------- Unreachable banner ---------- */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto;
+  max-width: 640px;
+  padding: 10px 16px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 15px;
+}
+.offline-banner[hidden] { display: none; }
+.offline-banner .material-symbols-rounded { color: #fff; }
 
 .empty {
   text-align: center;
