@@ -1,0 +1,4 @@
+# Let members of the gpio group use /dev/gpiomem (needed by RPi.GPIO / phatbeat).
+# Newer kernels (6.x) renamed the device subsystem from "bcm2835-gpiomem" to
+# "gpiomem", which leaves older distro rules not matching and the node root-only.
+SUBSYSTEM=="*gpiomem*", GROUP="gpio", MODE="0660"

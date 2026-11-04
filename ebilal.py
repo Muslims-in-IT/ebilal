@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-#from gluon import *
 import paho.mqtt.client as mqtt
 import time
 import argparse
@@ -13,7 +12,6 @@ import threading
 import urllib.request
 from dynaconf import LazySettings
 from dynaconf.loaders.toml_loader import write
-from cysystemd.journal import JournaldLogHandler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -21,30 +19,83 @@ from typing import List
 import uvicorn
 logger = logging.getLogger(__name__)
 
-# instantiate the JournaldLogHandler to hook into systemd
-journald_handler = JournaldLogHandler()
+# Paths. Everything is relative to where this file lives so the app runs the
+# same from /opt/ebilal (systemd), a Docker image, or a dev checkout.
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+SETTINGS_PATH = os.environ.get("EBILAL_SETTINGS", os.path.join(APP_DIR, "settings.toml"))
+WEB_DIR = os.path.join(APP_DIR, "ebilal_web")
 
-# set a formatter to include the level name
-journald_handler.setFormatter(logging.Formatter(
-    '[%(levelname)s] %(message)s'
-))
+# Feeds pinned to the top of the web UI until the user unpins them.
+DEFAULT_PINNED = ["activestream"]  # 24/7 Quraan recitation
 
-file_handler = RotatingFileHandler('ebilal_web/web.log', maxBytes=1024, backupCount=1)
-file_handler.setLevel(level=logging.DEBUG)
+# Log to journald when running under systemd, otherwise to stderr (Docker, dev).
+try:
+    from cysystemd.journal import JournaldLogHandler
+    journald_handler = JournaldLogHandler()
+    journald_handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+    logger.addHandler(journald_handler)
+except Exception:  # not on a systemd host, or cysystemd not installed
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(logging.Formatter('[%(levelname)s] %(message)s'))
+    logger.addHandler(stream_handler)
 
-# set a formatter with date and message
-file_handler.setFormatter(logging.Formatter(
-    '%(asctime)s %(message)s'
-))
+# Small rotating file, shown in the web UI's Diagnostics box
+try:
+    file_handler = RotatingFileHandler(os.path.join(WEB_DIR, 'web.log'), maxBytes=1024, backupCount=1)
+    file_handler.setLevel(level=logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+    logger.addHandler(file_handler)
+except OSError:
+    pass
 
-# add the journald handler to the current logger
-logger.addHandler(journald_handler)
-logger.addHandler(file_handler)
+
+class Config:
+    """Thread-safe view of settings.toml.
+
+    One source of truth for the player and the API, so a write from one can
+    never clobber a newer value written by the other. Reads are cached until
+    the file's mtime changes. Writes replace lists wholesale (dynaconf's
+    merge=True would concatenate them, which breaks removing a favourite).
+    """
+
+    def __init__(self, path):
+        self.path = path
+        self._lock = threading.RLock()
+        self._mtime = None
+        self._data = {}
+
+    def _load(self):
+        try:
+            mtime = os.path.getmtime(self.path)
+        except OSError:
+            return {}
+        if mtime != self._mtime:
+            data = LazySettings(settings_file=self.path).to_dict().get("DEFAULT", {})
+            self._data, self._mtime = dict(data), mtime
+        return self._data
+
+    def get(self, key, default=None):
+        with self._lock:
+            return self._load().get(key, default)
+
+    def update(self, **values):
+        with self._lock:
+            data = dict(self._load())
+            data.update(values)
+            write(self.path, {"DEFAULT": data}, merge=False)
+            self._mtime = None  # force re-read next time
+            return data
+
+
+config = Config(SETTINGS_PATH)
 
 # LiveMasjid client
 class LivemasjidClient:
     """Livemasjid client Object"""
-    def __init__(self):
+    VOLUME_COMMIT_DELAY = 0.5  # seconds of button quiet before a volume change is applied
+
+    def __init__(self, cfg=None):
+        self.cfg = cfg or config
         self.client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1)
         self.livestreams = []
         self.mounts = {}
@@ -53,26 +104,29 @@ class LivemasjidClient:
         self.audio_device = ""
         self.playing = ""
         self.current_url = ""
+        self.process = None
         self.volume = 80  # 0-100, applied in the player (ffplay -af volume=)
+        self._vol_lock = threading.Lock()
+        self._vol_timer = None
         self.load_config()
 
     def load_config(self, reload = False):
         logger.debug("reloading config file")
-        settings = LazySettings(settings_file="settings.toml")
-        self.baseURL = settings.default.server_url
+        self.baseURL = self.cfg.get("server_url", "http://livemasjid.com:8000/")
         logger.debug("Server URL: "+ self.baseURL)
-        self.mountToPlay = settings.default.mounts
-        self.audio_device = settings.default.audio_device
-        self.pimoroni = settings.default.pimoroni
+        self.mountToPlay = list(self.cfg.get("mounts", []))
+        self.audio_device = self.cfg.get("audio_device", "")
+        self.pimoroni = bool(self.cfg.get("pimoroni", False))
         try:
-            self.volume = int(settings.default.get("volume", self.volume))
+            self.volume = int(self.cfg.get("volume", self.volume))
         except Exception:
             pass
-        if (settings.default.loglevel == "DEBUG"):
+        loglevel = self.cfg.get("loglevel", "INFO")
+        if loglevel == "DEBUG":
             logger.setLevel(logging.DEBUG)
-        elif (settings.default.loglevel == "INFO"):
+        elif loglevel == "INFO":
             logger.setLevel(logging.INFO)
-            
+
         #Stop any playing streams and start any live streams
         if (reload):
             self.stop()
@@ -80,7 +134,7 @@ class LivemasjidClient:
                 if (mount in self.livestreams):
                     self.playmount(mount)
                     return
-    
+
     def set_mounts(self,mounts):
         self.mountToPlay = mounts
 
@@ -91,20 +145,69 @@ class LivemasjidClient:
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
         client.subscribe("mounts/#")
-        self.state["status"] = "connected"
+        if self.state.get("status") in ("starting", None):
+            self.state["status"] = "connected"
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self,client, userdata, msg):
         logger.debug(msg.topic+" "+str(msg.payload))
         message = msg.topic.split('/')
-        self.mounts[message[1]] = msg.payload.decode()
-        if (message[1] in self.mountToPlay):
-            if ("started" in msg.payload.decode()):
-                self.playmount(message[1])
-                self.livestreams.append(message[1])
-            elif "stopped" in msg.payload.decode():
-                self.stop()
-                if message[1] in self.livestreams: self.livestreams.remove(message[1])
+        mount, payload = message[1], msg.payload.decode()
+        self.mounts[mount] = payload
+        if mount in self.mountToPlay:
+            if "started" in payload:
+                self.playmount(mount)
+                if mount not in self.livestreams:
+                    self.livestreams.append(mount)
+            elif "stopped" in payload:
+                # Only silence the player if it is this stream that ended
+                if self.playing == mount:
+                    self.stop()
+                if mount in self.livestreams:
+                    self.livestreams.remove(mount)
+
+    # ---- what is live, and in what order do the skip buttons walk it ----
+    def live_mounts(self):
+        """Every mount MQTT reports as started, minus the .mp3 transcode twins."""
+        live = sorted(m for m, p in self.mounts.items() if "started" in p)
+        return [m for m in live if not (m.endswith(".mp3") and m[:-4] in live)]
+
+    def playlist(self):
+        """Live streams in skip order for the hardware buttons: your autoplay
+        (liked) feeds first, in the order you liked them, then everything else."""
+        live = self.live_mounts()
+        liked = [m for m in self.mountToPlay if m in live]
+        return liked + [m for m in live if m not in liked]
+
+    def step(self, direction):
+        """Play the next (+1) or previous (-1) live stream, wrapping around.
+        Returns the mount now playing, or None if nothing is live."""
+        playlist = self.playlist()
+        if not playlist:
+            logger.info("Skip pressed but no streams are live")
+            return None
+        try:
+            target = playlist[(playlist.index(self.playing) + direction) % len(playlist)]
+        except ValueError:  # nothing playing yet, or the last stream has gone offline
+            target = playlist[0] if direction > 0 else playlist[-1]
+        self.playmount(target)
+        return target
+
+    def toggle(self):
+        """Play/pause. A live stream cannot truly pause, so pause = stop, and
+        play resumes the last stream (or the first in the playlist) at the live edge."""
+        if self.is_playing():
+            self.stop()
+            return "stopped"
+        target = self.playing or (self.playlist() or [None])[0]
+        if not target:
+            logger.info("Play pressed but no streams are live")
+            return None
+        self.playmount(target)
+        return target
+
+    def is_playing(self):
+        return self.process is not None and self.process.poll() is None
 
     def playmount(self,mount):
         logger.debug("Playing mount "+mount)
@@ -126,7 +229,7 @@ class LivemasjidClient:
 
     def stop(self):
         logger.debug("stopping media player")
-        if hasattr(self, 'process') and self.process is not None:
+        if self.process is not None:
             if self.process.poll() is None:
                 self.process.kill()
             # Reap the child so it does not linger as a zombie
@@ -157,7 +260,7 @@ class LivemasjidClient:
 
     def disconnect(self):
         self.client.loop_stop()
-    
+
     def get_volume(self):
         return self.volume
 
@@ -166,14 +269,29 @@ class LivemasjidClient:
         current stream (ffmpeg has no runtime volume control for a live feed)."""
         self.volume = max(0, min(100, int(v)))
         try:
-            s = LazySettings(settings_file="settings.toml")
-            s.default.volume = self.volume
-            write('settings.toml', s.to_dict(), merge=True)
+            self.cfg.update(volume=self.volume)
         except Exception as e:
             logger.error("Could not persist volume: %s", e)
         if self.state.get("status") == "playing" and self.current_url:
             self.playurl(self.current_url)
         return self.volume
+
+    def nudge_volume(self, delta):
+        """Change volume instantly in memory, then apply it (relaunch the stream
+        and write settings.toml) once the buttons have been quiet for a moment.
+        Holding a button fires this many times a second; applying each one would
+        restart ffplay constantly and hammer the SD card."""
+        with self._vol_lock:
+            self.volume = max(0, min(100, self.volume + delta))
+            if self._vol_timer is not None:
+                self._vol_timer.cancel()
+            self._vol_timer = threading.Timer(self.VOLUME_COMMIT_DELAY, self._commit_volume)
+            self._vol_timer.daemon = True
+            self._vol_timer.start()
+            return self.volume
+
+    def _commit_volume(self):
+        self.set_volume(self.volume)
 
     def volup(self):
         return self.set_volume(self.volume + 10)
@@ -183,11 +301,15 @@ class LivemasjidClient:
 
     def getlivestreams(self):
         return self.livestreams
-    
+
     def getmounts(self):
         return self.mounts
 
     def getstate(self):
+        # ffplay exits by itself when a stream ends; don't keep claiming "playing"
+        if self.state.get("status") == "playing" and not self.is_playing():
+            self.state["status"] = "stopped"
+            self.state["mount"] = ""
         return self.state
 
     def getplaying(self):
@@ -209,35 +331,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-settings = LazySettings(settings_file="/opt/ebilal/settings.toml")
-
 # Volume is handled in the player (ffplay -af volume=) via the LivemasjidClient,
 # so it works regardless of the DAC's mixer controls or the service user's ALSA
 # view. See LivemasjidClient.set_volume / get_volume.
 
 @app.get("/favourites")
 def read_mounts():
-    return {"favourites": settings.default.mounts}
+    return {"favourites": config.get("mounts", [])}
 
 class favourites(BaseModel):
     favourites: List[str]
 
 @app.post("/favourites")
 def write_mounts(favourites: favourites):
-    settings.default.mounts = favourites.favourites
-    write('settings.toml', settings.to_dict() , merge=False)
+    config.update(mounts=favourites.favourites)
     livemasjid.set_mounts(favourites.favourites)
-    return {"favourites": settings.default.mounts}
+    return {"favourites": favourites.favourites}
+
+# Pinned feeds sit at the top of the web UI. Pinning is purely presentation:
+# what plays automatically is the favourites ("autoplay") list above.
+# Quraan recitation is pinned out of the box;
+# any feed can be pinned and the user can unpin all of them, so "never set"
+# (use the default) is distinct from "set to empty".
+@app.get("/pinned")
+def read_pinned():
+    return {"pinned": list(config.get("pinned", DEFAULT_PINNED))}
+
+class pinned(BaseModel):
+    pinned: List[str]
+
+@app.post("/pinned")
+def write_pinned(pinned: pinned):
+    # De-duplicate, keep order
+    ordered = list(dict.fromkeys(pinned.pinned))
+    config.update(pinned=ordered)
+    return {"pinned": ordered}
 
 @app.get("/server_url")
 def read_server_url():
-    return {"server_url": settings.default.server_url}
+    return {"server_url": config.get("server_url")}
 
 @app.post("/server_url/")
 def write_url(url: str):
-    settings.default.server_url = url
-    write('settings.toml', settings.to_dict(), merge=True)
-    return {"server_url": settings.default.server_url}
+    config.update(server_url=url)
+    return {"server_url": url}
 
 @app.get("/volume")
 def read_volume():
@@ -259,7 +396,6 @@ def voldown():
 # ---------------------------------------------------------------------------
 # Software updates (GitHub Releases)
 # ---------------------------------------------------------------------------
-APP_DIR = "/opt/ebilal"
 GITHUB_REPO = "Muslims-in-IT/ebilal"
 RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
@@ -366,6 +502,22 @@ def stop():
     livemasjid.stop()
     return livemasjid.getstate()
 
+# Same actions as the physical buttons, for scripts and other controllers.
+@app.post("/player/toggle")
+def player_toggle():
+    livemasjid.toggle()
+    return livemasjid.getstate()
+
+@app.post("/player/next")
+def player_next():
+    livemasjid.step(+1)
+    return livemasjid.getstate()
+
+@app.post("/player/prev")
+def player_prev():
+    livemasjid.step(-1)
+    return livemasjid.getstate()
+
 @app.get("/player")
 def state():
     return livemasjid.getstate()
@@ -379,56 +531,14 @@ def main():
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid.connect()
 
-    #Setup the Pimoroni module if it is enabled in settings
-    if (livemasjid.pimoroni):
-        logger.info("Phatbeat found")
-        import phatbeat
-        phatbeat.set_all(0,128,0,0.1)
-        phatbeat.show()
-        time.sleep(1)
-        phatbeat.clear()
-        phatbeat.show()
-
-        @phatbeat.on(phatbeat.BTN_VOLDN)
-        def pb_volume_down(pin):
-            livemasjid.voldown()
-            logger.debug("Volume down pressed")
-
-        @phatbeat.on(phatbeat.BTN_VOLUP)
-        def pb_volume_up(pin):
-            livemasjid.volup()
-            logger.debug("Volume up pressed")
-
-        @phatbeat.on(phatbeat.BTN_PLAYPAUSE)
-        def pb_play_pause(pin):
-            time.sleep(0.1)
-            phatbeat.clear()
-            phatbeat.show()
-            if livemasjid.player.is_playing:
-                livemasjid.player.pause
-            else: livemasjid.player.play
-
-        @phatbeat.on(phatbeat.BTN_FASTFWD)
-        def pb_fast_forward(pin):
-            try:
-                index = livemasjid.livestreams.index(livemasjid.playing)
-                livemasjid.playmount(livemasjid.getlivestreams()[index+1])
-            except Exception as e:
-                livemasjid.playmount(livemasjid.getlivestreams()[0])
-                logger.error(e.message, e.args)
-
-        @phatbeat.on(phatbeat.BTN_REWIND)
-        def pb_rewind(pin):
-            try:
-                index = livemasjid.livestreams.index(livemasjid.playing)
-                livemasjid.playmount(livemasjid.getlivestreams()[index-1])
-            except Exception as e:
-                livemasjid.playmount(livemasjid.getlivestreams()[0])
-                logger.error(e.message, e.args)
-
-        @phatbeat.on(phatbeat.BTN_ONOFF)
-        def perform_shutdown(pin):
-            os.system("sudo shutdown -h now")
+    # Physical buttons, if a pHAT BEAT is fitted and enabled in settings.toml
+    if livemasjid.pimoroni:
+        try:
+            from phatbeat_controls import PhatBeatControls
+            PhatBeatControls(livemasjid).start()
+        except Exception as e:  # never let a hardware problem take the player down
+            logger.error("Pimoroni controls disabled: %s "
+                         "(is the service user in the 'gpio' group?)", e)
 
     #Start the API
     # NOTE: reload=True spawns a filesystem watcher that pegs the Pi Zero's

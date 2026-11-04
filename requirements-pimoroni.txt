@@ -1,0 +1,4 @@
+# Extra packages for the Pimoroni pHAT BEAT buttons and LEDs (Raspberry Pi only).
+# Installed by: setup.sh --pimoroni
+phatbeat>=0.1.1
+RPi.GPIO>=0.7.0

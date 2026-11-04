@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2A2622">
+  <title>Set up secure connection · eBilal</title>
+  <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=EB+Garamond:ital@0;1&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .trust h1 { font-family: 'Cormorant Garamond', serif; font-size: 30px; margin: 4px 0 6px; }
+    .trust p, .trust li { font-size: 17px; }
+    .trust .card { padding: 18px 20px; margin-bottom: 16px; }
+    .trust ol { padding-left: 22px; display: grid; gap: 6px; }
+    .trust .platform-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
+    .trust .steps[hidden] { display: none; }
+    .trust .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; word-break: break-all; color: var(--ink-soft); }
+    .trust .result { margin-top: 10px; font-size: 16px; }
+    .trust .result.ok { color: var(--accent); }
+    .trust .result.bad { color: var(--danger); }
+    .trust .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .trust .btn { text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .trust .why { font-size: 15px; color: var(--ink-soft); }
+  </style>
+</head>
+
+<body>
+  <div class="wash"></div>
+  <header class="topbar">
+    <a class="brand" href="/">
+      <img class="brand-mark" src="icons/radio.svg" alt="" width="30" height="30">
+      <span class="brand-text">eBilal</span>
+    </a>
+  </header>
+
+  <main class="container trust">
+    <section class="card">
+      <h1>Secure connection</h1>
+      <p>Do this once on each phone, tablet or computer. Afterwards eBilal opens at
+        <strong id="secure-url">https://ebilal.local/</strong> with no "Not secure" warning, and you can
+        install it as an app.</p>
+      <p class="why">Your eBilal made its own security certificate when it was set up. Your device just
+        needs to be told to trust it. That certificate can only vouch for devices on your home network,
+        never for websites on the internet.</p>
+    </section>
+
+    <section class="card">
+      <div class="setting-label">1 · Install the certificate</div>
+      <div class="platform-tabs" role="tablist">
+        <button class="chip" data-os="ios" role="tab">iPhone / iPad</button>
+        <button class="chip" data-os="android" role="tab">Android</button>
+        <button class="chip" data-os="mac" role="tab">Mac</button>
+        <button class="chip" data-os="windows" role="tab">Windows</button>
+        <button class="chip" data-os="linux" role="tab">Linux / other</button>
+      </div>
+
+      <div class="steps" data-os="ios" hidden>
+        <ol>
+          <li>Open this page in <strong>Safari</strong> and tap <a href="/ca/ebilal.mobileconfig">Download profile</a>. Tap <em>Allow</em>.</li>
+          <li>Open <strong>Settings</strong>, tap <em>Profile Downloaded</em> near the top, then <em>Install</em> (it will say "Not Verified", that is expected).</li>
+          <li>Go to <strong>Settings › General › About › Certificate Trust Settings</strong> and switch on <em>eBilal local CA</em>.</li>
+        </ol>
+      </div>
+
+      <div class="steps" data-os="android" hidden>
+        <ol>
+          <li>Tap <a href="/ca/ebilal-ca.crt" download>Download certificate</a>.</li>
+          <li>Open <strong>Settings › Security &amp; privacy › More security settings › Encryption &amp; credentials ›
+              Install a certificate › CA certificate</strong> (wording varies by phone; search Settings for "CA certificate").</li>
+          <li>Tap <em>Install anyway</em> and choose the <code>ebilal-ca.crt</code> file you downloaded.</li>
+        </ol>
+      </div>
+
+      <div class="steps" data-os="mac" hidden>
+        <ol>
+          <li>Click <a href="/ca/ebilal-ca.crt" download>Download certificate</a> and open the file. Keychain Access opens.</li>
+          <li>Add it to the <em>System</em> (or login) keychain, then double-click <em>eBilal local CA</em>.</li>
+          <li>Expand <em>Trust</em>, set <em>When using this certificate</em> to <strong>Always Trust</strong>, close and enter your password.</li>
+        </ol>
+      </div>
+
+      <div class="steps" data-os="windows" hidden>
+        <ol>
+          <li>Click <a href="/ca/ebilal-ca.cer" download>Download certificate</a> and open it.</li>
+          <li>Click <em>Install Certificate…</em>, choose <em>Current User</em>, then <em>Place all certificates in the following store</em>.</li>
+          <li>Browse to <strong>Trusted Root Certification Authorities</strong>, finish, and confirm the warning.</li>
+        </ol>
+      </div>
+
+      <div class="steps" data-os="linux" hidden>
+        <ol>
+          <li><a href="/ca/ebilal-ca.crt" download>Download certificate</a>.</li>
+          <li>Chrome: <em>Settings › Privacy and security › Security › Manage certificates › Authorities › Import</em>, tick "trust for websites".</li>
+          <li>Firefox (any platform): <em>Settings › Privacy &amp; Security › Certificates › View Certificates › Authorities › Import</em>.</li>
+        </ol>
+      </div>
+
+      <p class="mono">Certificate fingerprint (SHA-256): <span id="fp">…</span></p>
+    </section>
+
+    <section class="card">
+      <div class="setting-label">2 · Check it worked</div>
+      <p>Then come back here and test. If it passes, open the secure app and add it to your home screen.</p>
+      <div class="actions">
+        <button class="btn btn-ghost" id="btn-test">Test secure connection</button>
+        <a class="btn btn-primary" id="btn-open" href="/" hidden>Open eBilal securely</a>
+      </div>
+      <p class="result" id="result" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <a href="/">Back to eBilal</a>
+  </footer>
+
+  <script>
+    const secure = "https://" + location.hostname + "/";
+    document.getElementById("secure-url").textContent = secure;
+    document.getElementById("btn-open").href = secure;
+
+    // Platform tabs, preselect the visitor's platform
+    function guessOS() {
+      const ua = navigator.userAgent;
+      if (/iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) return "ios";
+      if (/android/i.test(ua)) return "android";
+      if (/macintosh/i.test(ua)) return "mac";
+      if (/windows/i.test(ua)) return "windows";
+      return "linux";
+    }
+    function showOS(os) {
+      document.querySelectorAll(".platform-tabs .chip").forEach((b) => {
+        const on = b.dataset.os === os;
+        b.classList.toggle("is-active", on);
+        b.setAttribute("aria-selected", on);
+      });
+      document.querySelectorAll(".steps").forEach((s) => (s.hidden = s.dataset.os !== os));
+    }
+    document.querySelectorAll(".platform-tabs .chip").forEach((b) => b.addEventListener("click", () => showOS(b.dataset.os)));
+    showOS(guessOS());
+
+    fetch("/ca/fingerprint.txt").then((r) => r.text()).then((t) => (document.getElementById("fp").textContent = t.trim())).catch(() => {});
+
+    // A no-cors request succeeds only if the TLS handshake (and so the trust) is OK
+    async function testSecure() {
+      const out = document.getElementById("result");
+      out.className = "result";
+      out.textContent = "Testing…";
+      try {
+        await fetch(secure + "api/version?probe=" + Date.now(), { mode: "no-cors", cache: "no-store" });
+        out.className = "result ok";
+        out.textContent = "Secure connection works on this device.";
+        document.getElementById("btn-open").hidden = false;
+      } catch (e) {
+        out.className = "result bad";
+        out.textContent = "Not trusted yet. Finish step 1 (on iPhone, don't forget Certificate Trust Settings), then test again. Some browsers need restarting.";
+      }
+    }
+    document.getElementById("btn-test").addEventListener("click", testSecure);
+    if (location.protocol === "https:") testSecure();
+  </script>
+</body>
+
+</html>

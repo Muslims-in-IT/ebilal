@@ -1,0 +1,14 @@
+# Keep eBilal's local HTTPS certificate valid and matching the current
+# hostname/IP. Runs at boot (before nginx) and daily via ebilal-tls.timer.
+[Unit]
+Description=eBilal local HTTPS certificate
+Wants=network-online.target
+After=network-online.target
+Before=nginx.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/ebilal-tls
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+# Keep Wi-Fi power saving OFF.
+# On the Pi Zero W (BCM43430) power save makes the board stop answering unicast
+# traffic: it stays associated and keeps playing, but the web app, SSH and ping
+# all time out, so it looks dead. An always-on appliance must not do that.
+[Unit]
+Description=Disable Wi-Fi power save (eBilal)
+After=sys-subsystem-net-devices-wlan0.device network-pre.target
+Wants=sys-subsystem-net-devices-wlan0.device
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/iw dev wlan0 set power_save off
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
