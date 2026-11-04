@@ -102,7 +102,7 @@ info "reachable at http://$(hostname -s).local/"
 # ------------------------------------------------------------------ 3. user
 step "Service user"
 id "$APP_USER" >/dev/null 2>&1 || adduser --system --group --home "/home/$APP_USER" --shell /usr/sbin/nologin "$APP_USER"
-for g in audio users gpio; do
+for g in audio users gpio input; do
   getent group "$g" >/dev/null && usermod -aG "$g" "$APP_USER"
 done
 info "user $APP_USER in: $(id -nG "$APP_USER")"
@@ -179,10 +179,31 @@ if ip link show wlan0 >/dev/null 2>&1; then
 fi
 
 if [ "$PIMORONI" = 1 ] && [ -n "$BOOT_CONFIG" ]; then
+  # pHAT BEAT audio: the PCM5102a DAC
   if ! grep -q '^dtoverlay=hifiberry-dac' "$BOOT_CONFIG"; then
     echo "dtoverlay=hifiberry-dac" >> "$BOOT_CONFIG"
     NEEDS_REBOOT=1
     info "pHAT BEAT audio overlay added to $BOOT_CONFIG"
+  fi
+  # pHAT BEAT buttons: let the kernel turn each one into a key press
+  # (mapping lives in pimoroni.py, OVERLAYS)
+  if ! grep -q '^# eBilal: pHAT BEAT buttons' "$BOOT_CONFIG"; then
+    {
+      echo ""
+      echo "# eBilal: pHAT BEAT buttons (kernel gpio-key; on/off is KEY_PROG1, not KEY_POWER)"
+      "$APP_DIR/venv/bin/python3" -c "import sys; sys.path.insert(0, '$APP_DIR'); import pimoroni; print('\n'.join(pimoroni.OVERLAYS))"
+    } >> "$BOOT_CONFIG"
+    info "pHAT BEAT button overlays added to $BOOT_CONFIG"
+  fi
+  # Load them now too, so the buttons work without waiting for a reboot
+  if command -v dtoverlay >/dev/null && ! dtoverlay -l 2>/dev/null | grep -q gpio-key; then
+    "$APP_DIR/venv/bin/python3" -c "import sys; sys.path.insert(0, '$APP_DIR'); import pimoroni; print('\n'.join(pimoroni.OVERLAYS))" |
+      while IFS= read -r line; do
+        # "dtoverlay=gpio-key,gpio=6,..." -> dtoverlay gpio-key gpio=6 ...
+        dtoverlay $(echo "${line#dtoverlay=}" | tr ',' ' ') 2>/dev/null ||
+          warn "could not load '$line' now; it will load after a reboot"
+      done
+    info "pHAT BEAT buttons active"
   fi
 fi
 

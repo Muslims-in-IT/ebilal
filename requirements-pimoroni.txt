@@ -1,4 +1,8 @@
-# Extra packages for the Pimoroni pHAT BEAT buttons and LEDs (Raspberry Pi only).
+# Extra packages for the Pimoroni pHAT BEAT (Raspberry Pi only).
 # Installed by: setup.sh --pimoroni
-phatbeat>=0.1.1
+#
+# Only the LEDs need a GPIO library (plain outputs, which still work on 6.x
+# kernels). Buttons come from the kernel's gpio-key overlay, see pimoroni.py.
+# The old `phatbeat` library is no longer used: its setup arms button edge
+# detection, which fails on kernel 6.5+.
 RPi.GPIO>=0.7.0

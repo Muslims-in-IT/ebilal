@@ -14,7 +14,7 @@ Turn a Raspberry Pi into a dedicated player for [Livemasjid.com](https://livemas
 - **Secure local connection**: each device makes its own HTTPS certificate, so after a one-time setup per phone there is no "Not secure" warning.
 - **One-line install** on any Raspberry Pi, Debian or Ubuntu machine, and in-app software updates.
 - **REST API**: everything the UI does is available over a documented API.
-- **Pirate Radio ready**: optional [Pimoroni pHAT BEAT](https://shop.pimoroni.com/products/pirate-radio-pi-zero-w-project-kit) support for physical play/skip/volume buttons.
+- **Pirate Radio ready**: optional [Pimoroni pHAT BEAT](https://shop.pimoroni.com/products/pirate-radio-pi-zero-w-project-kit) support: play/pause, next/previous, volume (hold to repeat), hold on/off for 3 seconds to power down, with LED feedback.
 - **Light on resources**: runs comfortably on a Raspberry Pi Zero W.
 
 ## Hardware
@@ -106,6 +106,7 @@ The daemon connects to Livemasjid's MQTT broker and watches for your favourite m
 - **Watch logs**: `journalctl -u ebilal.service -f`
 - **No sound**: confirm your audio device with `aplay -l` and set `audio_device` in `settings.toml`.
 - **Device keeps disappearing from the network** (Pi Zero W): Wi-Fi power saving must be off. Check with `iw wlan0 get power_save`; the installer adds `wifi-powersave-off.service` to keep it off.
+- **pHAT BEAT buttons do nothing**: run the installer with `--pimoroni` and reboot. Check `dtoverlay -l` lists six `gpio-key` entries and `journalctl -u ebilal | grep Buttons` shows it listening. The buttons are read as kernel key events, so `evtest` (or any media-key keyboard) can be used to test them.
 - **Browser says "Not secure"**: do the one-time setup at `http://ebilal.local/trust.html` on that device.
 - **Nothing auto-plays**: make sure at least one of your `mounts` is actually live, and that the daemon reports `Connected with result code 0` in the logs.
 

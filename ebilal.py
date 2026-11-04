@@ -17,7 +17,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 import uvicorn
-logger = logging.getLogger(__name__)
+# Named "ebilal" (not __name__, which is "__main__" when run as a script) so
+# module loggers such as "ebilal.pimoroni" share these handlers.
+logger = logging.getLogger("ebilal")
 
 # Paths. Everything is relative to where this file lives so the app runs the
 # same from /opt/ebilal (systemd), a Docker image, or a dev checkout.
@@ -531,14 +533,14 @@ def main():
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
     livemasjid.connect()
 
-    # Physical buttons, if a pHAT BEAT is fitted and enabled in settings.toml
+    # Physical buttons + LEDs, if a pHAT BEAT is fitted and enabled in
+    # settings.toml. Buttons arrive as kernel key events (see pimoroni.py).
     if livemasjid.pimoroni:
         try:
-            from phatbeat_controls import PhatBeatControls
+            from pimoroni import PhatBeatControls
             PhatBeatControls(livemasjid).start()
         except Exception as e:  # never let a hardware problem take the player down
-            logger.error("Pimoroni controls disabled: %s "
-                         "(is the service user in the 'gpio' group?)", e)
+            logger.error("Pimoroni controls disabled: %s", e)
 
     #Start the API
     # NOTE: reload=True spawns a filesystem watcher that pegs the Pi Zero's
