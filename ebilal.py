@@ -17,7 +17,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
 import uvicorn
-logger = logging.getLogger(__name__)
+# Named "ebilal" (not __name__, which is "__main__" when run as a script) so
+# module loggers such as "ebilal.pimoroni" share these handlers.
+logger = logging.getLogger("ebilal")
 
 # Paths. Everything is relative to where this file lives so the app runs the
 # same from /opt/ebilal (systemd), a Docker image, or a dev checkout.
