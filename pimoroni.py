@@ -26,8 +26,10 @@ The LEDs are APA102 pixels on two GPIO lines (data 23, clock 24). They are
 driven here directly; the `phatbeat` library cannot be used any more because
 its setup always arms button edge detection, which now fails.
 """
+import array
 import glob
 import logging
+import math
 import os
 import select
 import struct
@@ -51,6 +53,22 @@ OVERLAYS = [
     "dtoverlay=gpio-key,gpio=26,keycode=114,label=VOLDN",
     "dtoverlay=gpio-key,gpio=12,keycode=148,label=ONOFF",
 ]
+
+# LED colour schemes for the VU meter and the volume bar: one colour per
+# position, bottom (0) to top (7). Shown as swatches in the web UI.
+def _ramp(a, b, n=8):
+    return [tuple(round(a[c] + (b[c] - a[c]) * i / (n - 1)) for c in range(3)) for i in range(n)]
+
+SCHEMES = {
+    "classic": [(0, 170, 60)] * 5 + [(210, 140, 0)] * 2 + [(220, 20, 20)],   # green, amber, red
+    "ebilal":  _ramp((15, 160, 140), (212, 175, 89)),                        # app teal to gold
+    "ocean":   _ramp((0, 40, 200), (40, 220, 230)),                          # deep blue to cyan
+    "sunset":  _ramp((230, 150, 0), (210, 20, 80)),                          # amber to magenta
+    "rainbow": [(220, 20, 20), (230, 100, 0), (220, 190, 0), (40, 190, 40),
+                (0, 170, 170), (20, 90, 230), (110, 40, 220), (190, 40, 190)],
+    "white":   [(200, 200, 200)] * 8,
+}
+DEFAULT_SCHEME = "classic"
 
 GREEN = (0, 160, 90)
 AMBER = (200, 120, 0)
@@ -169,15 +187,21 @@ class PhatBeatLeds:
     """APA102 driver for the pHAT BEAT's 16 pixels (two columns of 8).
 
     Protocol and pixel order follow Pimoroni's phatbeat library (MIT licence):
-    channel 0 is the left column bottom-to-top, channel 1 the right column.
+    channel 0 is the left column, channel 1 the right, position 0 at the
+    "bottom" when the board is mounted Pimoroni's way. In the Pirate Radio case
+    the board sits the other way up, so `flip` (default) makes position 0 the
+    physical bottom there.
     """
     DAT, CLK = 23, 24
     NUM_PIXELS, CHANNEL_PIXELS = 16, 8
+    # MSB-first data bits for every byte value, precomputed for show()
+    _BITS = [tuple((b >> i) & 1 for i in range(7, -1, -1)) for b in range(256)]
 
-    def __init__(self, gpio=None):
+    def __init__(self, gpio=None, flip=True):
         if gpio is None:
             import RPi.GPIO as gpio  # outputs still work on 6.x kernels
         self.gpio = gpio
+        self.flip = flip
         gpio.setwarnings(False)
         gpio.setmode(gpio.BCM)
         gpio.setup(self.DAT, gpio.OUT)
@@ -185,12 +209,21 @@ class PhatBeatLeds:
         self.pixels = [[0, 0, 0, 7] for _ in range(self.NUM_PIXELS)]
         self._lock = threading.Lock()
 
-    def set_pixel(self, x, r, g, b, brightness=0.2, channel=None):
+    def _index(self, x, channel):
         if channel in (0, 1):
-            x += channel * self.CHANNEL_PIXELS
-        if x >= self.CHANNEL_PIXELS:  # right column runs the other way
-            x = self.NUM_PIXELS - 1 - (x - self.CHANNEL_PIXELS)
-        self.pixels[x] = [int(r) & 0xFF, int(g) & 0xFF, int(b) & 0xFF, int(31 * brightness) & 0x1F]
+            col, pos = channel, x
+        else:
+            col, pos = divmod(x, self.CHANNEL_PIXELS)
+        if not 0 <= pos < self.CHANNEL_PIXELS:
+            raise IndexError("LED position %s out of range" % x)
+        if self.flip:
+            pos = self.CHANNEL_PIXELS - 1 - pos
+        # The chain runs up the left column and back down the right one
+        return pos if col == 0 else self.NUM_PIXELS - 1 - pos
+
+    def set_pixel(self, x, r, g, b, brightness=0.2, channel=None):
+        self.pixels[self._index(x, channel)] = [int(r) & 0xFF, int(g) & 0xFF, int(b) & 0xFF,
+                                                 int(31 * brightness) & 0x1F]
 
     def set_all(self, r, g, b, brightness=0.2):
         for x in range(self.NUM_PIXELS):
@@ -200,31 +233,101 @@ class PhatBeatLeds:
         for p in self.pixels:
             p[0:3] = [0, 0, 0]
 
-    def _clock(self, n):
-        out = self.gpio.output
-        for _ in range(n):
-            out(self.CLK, 1)
-            out(self.CLK, 0)
-
-    def _byte(self, byte):
-        out = self.gpio.output
-        for _ in range(8):
-            out(self.DAT, byte & 0x80)
-            out(self.CLK, 1)
-            out(self.CLK, 0)
-            byte <<= 1
-
     def show(self):
+        """Clock out one frame: 32 zero bits, 4 bytes per pixel, 32 one bits.
+        Data and clock-high go out in one call (about 12 ms a frame on a Zero)."""
+        frame = bytearray(4)
+        for r, g, b, br in self.pixels:
+            frame += bytes((0xE0 | br, b, g, r))
+        frame += b"\xff" * 4
+        out, pair, clk, bits = self.gpio.output, [self.DAT, self.CLK], self.CLK, self._BITS
         with self._lock:
-            self.gpio.output(self.DAT, 0)
-            self._clock(32)                    # start frame
-            for r, g, b, br in self.pixels:
-                self._byte(0xE0 | br)
-                self._byte(b)
-                self._byte(g)
-                self._byte(r)
-            self.gpio.output(self.DAT, 1)
-            self._clock(32)                    # end frame (latches the small APA102s)
+            for byte in frame:
+                for bit in bits[byte]:
+                    out(pair, (bit, 1))
+                    out(clk, 0)
+
+
+# ----------------------------------------------------------------- VU meter
+class VuMeter:
+    """Stereo level meter on the LED columns, fed by the player.
+
+    The player (ffmpeg) writes a low-rate copy of the audio, 16-bit stereo at
+    RATE Hz, to a pipe. attach(pipe) starts a thread that MUST keep draining it
+    (a full pipe would stall the audio), turns each 1/FPS second into an RMS
+    level per channel, and lights 0..8 LEDs per column. Redraws only when the
+    bars change, and stays out of the way while button feedback is showing.
+    """
+    RATE = 2000
+    FPS = 10
+    FLOOR_DB = -40.0       # level shown as zero LEDs
+    PEAK_DECAY = 1         # LEDs dropped per frame, so peaks fall smoothly
+    BRIGHTNESS = 0.08
+
+    def __init__(self, leds, lock, busy=lambda: False, scheme=DEFAULT_SCHEME, brightness=None):
+        self.leds = leds
+        self.lock = lock
+        self.busy = busy
+        self.scheme = scheme if scheme in SCHEMES else DEFAULT_SCHEME
+        if brightness is not None:
+            self.BRIGHTNESS = brightness
+        self._gen = 0
+        self._gen_lock = threading.Lock()
+
+    def attach(self, pipe):
+        with self._gen_lock:
+            self._gen += 1
+            gen = self._gen
+        threading.Thread(target=self._run, args=(pipe, gen), name="pimoroni-vu", daemon=True).start()
+
+    def level(self, samples):
+        """RMS of int16 samples -> LEDs lit, 0..8."""
+        if not samples:
+            return 0
+        rms = math.sqrt(sum(x * x for x in samples) / len(samples))
+        if rms < 1:
+            return 0
+        db = 20 * math.log10(rms / 32768.0)
+        return max(0, min(8, round((db - self.FLOOR_DB) / -self.FLOOR_DB * 8)))
+
+    def colour(self, i):
+        return SCHEMES.get(self.scheme, SCHEMES[DEFAULT_SCHEME])[i]
+
+    def _draw(self, left, right):
+        with self.lock:
+            self.leds.clear()
+            for channel, lit in ((0, left), (1, right)):
+                for x in range(lit):
+                    self.leds.set_pixel(x, *self.colour(x), brightness=self.BRIGHTNESS, channel=channel)
+            self.leds.show()
+
+    def _run(self, pipe, gen):
+        chunk = self.RATE // self.FPS * 4          # frames per tick x 2 channels x 2 bytes
+        shown = (0, 0)
+        try:
+            while True:
+                data = pipe.read(chunk)
+                if not data:
+                    break
+                if gen != self._gen:
+                    continue                       # a newer stream took over: just drain
+                data = data[: len(data) // 4 * 4]
+                pcm = array.array("h", data)
+                target = (self.level(pcm[0::2]), self.level(pcm[1::2]))
+                # instant rise, gentle fall
+                new = tuple(max(t, s - self.PEAK_DECAY) for t, s in zip(target, shown))
+                if new != shown and not self.busy():
+                    self._draw(*new)
+                shown = new
+        except (OSError, ValueError):
+            pass
+        finally:
+            try:
+                pipe.close()
+            except (OSError, ValueError):
+                pass
+            if gen == self._gen and not self.busy():
+                self._draw(0, 0)
 
 
 # ------------------------------------------------------------------ controls
@@ -238,11 +341,18 @@ class PhatBeatControls:
     REPEAT_INTERVAL = 0.15    # s between repeats
     SHUTDOWN_HOLD = 3.0       # s the on/off button must be held
     LED_SECONDS = 1.2
-    LED_BRIGHTNESS = 0.1
 
-    def __init__(self, player, leds=None, shutdown=None, reader_factory=KeyReader):
+    def __init__(self, player, leds=None, shutdown=None, reader_factory=KeyReader,
+                 flip=True, vu_meter=True, scheme=DEFAULT_SCHEME, brightness=10, boot_animation=True):
         self.player = player
         self.leds = leds
+        self.flip = flip
+        self.vu_meter = vu_meter
+        self.scheme = scheme if scheme in SCHEMES else DEFAULT_SCHEME
+        self.LED_BRIGHTNESS = max(1, min(100, int(brightness))) / 100.0
+        self.boot_animation = boot_animation
+        self.vu = None
+        self._busy_until = 0.0
         self._shutdown = shutdown or _poweroff
         self._reader_factory = reader_factory
         self.reader = None
@@ -253,14 +363,24 @@ class PhatBeatControls:
     def start(self):
         if self.leds is None:
             try:
-                self.leds = PhatBeatLeds()
+                self.leds = PhatBeatLeds(flip=self.flip)
             except Exception as e:
                 logger.warning("pHAT BEAT LEDs unavailable: %s", e)
                 self.leds = NoLeds()
+        if not isinstance(self.leds, NoLeds):
+            self.leds.flip = self.flip
+            self.vu = VuMeter(self.leds, self._led_lock, busy=self.busy,
+                              scheme=self.scheme, brightness=self.LED_BRIGHTNESS)
+            if self.vu_meter:
+                self.player.vu_sink = self.vu.attach   # player sends it a low-rate audio copy
+                logger.info("VU meter enabled")
         self.reader = self._reader_factory(self.handle_key)
         self.reader.start()
         logger.info("pHAT BEAT controls enabled")
-        self._flash(GREEN)
+        if self.boot_animation:
+            threading.Thread(target=self.kitt, name="pimoroni-kitt", daemon=True).start()
+        else:
+            self._flash(GREEN)
         return self
 
     # ------------------------------------------------------------ key events
@@ -321,15 +441,99 @@ class PhatBeatControls:
         self._flash(RED)
         self._shutdown()
 
+    # -------------------------------------------------------------- settings
+    def settings(self):
+        return {"vu_meter": self.vu_meter, "led_flip": self.flip, "boot_animation": self.boot_animation, "led_scheme": self.scheme,
+                "led_brightness": round(self.LED_BRIGHTNESS * 100),
+                "leds_available": not isinstance(self.leds, NoLeds)}
+
+    def apply(self, vu_meter=None, led_flip=None, led_scheme=None, led_brightness=None,
+              boot_animation=None):
+        """Change settings live. Returns True if the playing stream must restart
+        (switching the VU meter changes how the player is launched)."""
+        restart = False
+        if boot_animation is not None:
+            self.boot_animation = bool(boot_animation)
+        if led_flip is not None:
+            self.flip = bool(led_flip)
+            self.leds.flip = self.flip
+        if led_scheme is not None:
+            if led_scheme not in SCHEMES:
+                raise ValueError("unknown colour scheme: %s" % led_scheme)
+            self.scheme = led_scheme
+            if self.vu:
+                self.vu.scheme = led_scheme
+        if led_brightness is not None:
+            self.LED_BRIGHTNESS = max(1, min(100, int(led_brightness))) / 100.0
+            if self.vu:
+                self.vu.BRIGHTNESS = self.LED_BRIGHTNESS
+        if vu_meter is not None and bool(vu_meter) != self.vu_meter:
+            self.vu_meter = bool(vu_meter)
+            if self.vu:
+                self.player.vu_sink = self.vu.attach if self.vu_meter else None
+                restart = True
+        return restart
+
+    def kitt(self, sweeps=2, frame=0.045):
+        """KITT scanner: a red eye with a fading tail sweeps up and down both
+        columns, then a flash in the current scheme. Runs at boot."""
+        tail = (1.0, 0.45, 0.18, 0.06)              # brightness of the eye and its tail
+        path = list(range(8)) + list(range(6, 0, -1))  # up, then back down
+        self._busy_until = time.monotonic() + sweeps * len(path) * (frame + 0.012) + 1.5
+        trail = []
+        for _ in range(sweeps):
+            for pos in path:
+                trail = [pos] + trail[:len(tail) - 1]
+                with self._led_lock:
+                    self.leds.clear()
+                    for age, x in reversed(list(enumerate(trail))):
+                        level = tail[age]
+                        for channel in (0, 1):
+                            self.leds.set_pixel(x, round(255 * level), 0, 0,
+                                                brightness=self.LED_BRIGHTNESS, channel=channel)
+                    self.leds.show()
+                time.sleep(frame)
+        colours = SCHEMES[self.scheme]
+        with self._led_lock:
+            self.leds.clear()
+            for channel in (0, 1):
+                for x in range(8):
+                    self.leds.set_pixel(x, *colours[x], brightness=self.LED_BRIGHTNESS, channel=channel)
+            self.leds.show()
+        time.sleep(0.6)
+        self._clear()
+
+    def test_leds(self):
+        """Fill both columns bottom to top in the current scheme, then clear:
+        shows direction, colours and brightness in about two seconds."""
+        def run():
+            self._busy_until = time.monotonic() + 3
+            colours = SCHEMES[self.scheme]
+            for lit in range(1, 9):
+                with self._led_lock:
+                    self.leds.clear()
+                    for channel in (0, 1):
+                        for x in range(lit):
+                            self.leds.set_pixel(x, *colours[x], brightness=self.LED_BRIGHTNESS, channel=channel)
+                    self.leds.show()
+                time.sleep(0.18)
+            time.sleep(0.8)
+            self._clear()
+        threading.Thread(target=run, name="pimoroni-test", daemon=True).start()
+
     # ------------------------------------------------------------------ LEDs
+    def busy(self):
+        """True while button feedback owns the LEDs (the VU meter waits)."""
+        return time.monotonic() < self._busy_until
+
     def _show_bar(self, volume):
         lit = round(volume / 100 * 8)
-        colour = GREEN if volume < 80 else AMBER
+        colours = SCHEMES[self.scheme]
         with self._led_lock:
             self.leds.clear()
             for channel in (0, 1):
                 for x in range(lit):
-                    self.leds.set_pixel(x, *colour, brightness=self.LED_BRIGHTNESS, channel=channel)
+                    self.leds.set_pixel(x, *colours[x], brightness=self.LED_BRIGHTNESS, channel=channel)
             self.leds.show()
         self._clear_soon()
 
@@ -340,6 +544,7 @@ class PhatBeatControls:
         self._clear_soon()
 
     def _clear_soon(self):
+        self._busy_until = time.monotonic() + self.LED_SECONDS
         if self._led_timer is not None:
             self._led_timer.cancel()
         self._led_timer = threading.Timer(self.LED_SECONDS, self._clear)

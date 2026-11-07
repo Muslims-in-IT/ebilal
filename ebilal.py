@@ -12,10 +12,10 @@ import threading
 import urllib.request
 from dynaconf import LazySettings
 from dynaconf.loaders.toml_loader import write
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 import uvicorn
 # Named "ebilal" (not __name__, which is "__main__" when run as a script) so
 # module loggers such as "ebilal.pimoroni" share these handlers.
@@ -91,6 +91,41 @@ class Config:
 
 config = Config(SETTINGS_PATH)
 
+class AlsaMixer:
+    """Live volume through an ALSA mixer control (default "PCM").
+
+    On the Pi, /etc/asound.conf provides a softvol "PCM" control on card 0. Its
+    steps are spaced evenly in decibels, so each button press sounds like a
+    real change, and it applies instantly with no stream restart. When no such
+    control exists, the player falls back to an ffmpeg gain (which needs a
+    restart to change).
+    """
+
+    def __init__(self, control="PCM", runner=subprocess.run):
+        self.control = control
+        self.run = runner
+        self.available = bool(control) and self._amixer("sget", control) is not None
+
+    def _amixer(self, *args):
+        try:
+            r = self.run(["amixer", "-q" if args[0] == "sset" else "-M", *args],
+                         capture_output=True, text=True, timeout=5)
+            return r if r.returncode == 0 else None
+        except (OSError, subprocess.SubprocessError):
+            return None
+
+    def set(self, volume):
+        return self._amixer("sset", self.control, "%d%%" % volume) is not None
+
+
+def perceptual_gain(volume):
+    """0-100 -> linear gain on a 40 dB curve (100 = 0 dB, 50 = -20 dB, 0 = mute).
+    Linear gain sounds like almost nothing happens between 50% and 100%."""
+    if volume <= 0:
+        return 0.0
+    return 10 ** ((min(100, volume) - 100) * 0.4 / 20)
+
+
 # LiveMasjid client
 class LivemasjidClient:
     """Livemasjid client Object"""
@@ -107,10 +142,17 @@ class LivemasjidClient:
         self.playing = ""
         self.current_url = ""
         self.process = None
-        self.volume = 80  # 0-100, applied in the player (ffplay -af volume=)
+        self.vu_sink = None   # set by the pHAT BEAT VU meter: called with the audio tap pipe
+        self.volume = 80  # 0-100
         self._vol_lock = threading.Lock()
         self._vol_timer = None
         self.load_config()
+        self.mixer = AlsaMixer(self.cfg.get("mixer_control", "PCM"))
+        if self.mixer.available:
+            self.mixer.set(self.volume)
+            logger.info("Volume via ALSA mixer '%s'", self.mixer.control)
+        else:
+            logger.info("No ALSA mixer control; volume via player gain")
 
     def load_config(self, reload = False):
         logger.debug("reloading config file")
@@ -218,16 +260,30 @@ class LivemasjidClient:
         self.state["status"] = "playing"
         self.state["mount"] = mount
 
+    def player_command(self, url):
+        """ffplay normally; ffmpeg with a low-rate audio tap when the VU meter wants one."""
+        mixer = getattr(self, "mixer", None)
+        gain = 1.0 if mixer is not None and mixer.available else perceptual_gain(self.volume)
+        if self.vu_sink is None:
+            return ["ffplay", "-vn", "-nostats", "-loglevel", "error",
+                    "-autoexit", "-nodisp", "-af", "volume=%.4f" % gain, url]
+        from pimoroni import VuMeter
+        graph = ("[0:a]asplit=2[a][v];[a]volume=%.4f[o];"
+                 "[v]aresample=%d,aformat=sample_fmts=s16:channel_layouts=stereo[m]" % (gain, VuMeter.RATE))
+        return ["ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-i", url,
+                "-filter_complex", graph,
+                "-map", "[o]", "-f", "alsa", "default",
+                "-map", "[m]", "-f", "s16le", "pipe:1"]
+
     def playurl(self,url):
         self.stop()
         self.current_url = url
-        # ffmpeg volume filter takes a linear gain: 0.0 (mute) .. 1.0 (unity).
-        gain = max(0.0, min(1.0, self.volume / 100.0))
         logger.debug("Starting media player at volume %s%%", self.volume)
-        self.process = subprocess.Popen(
-            ["ffplay", "-vn", "-nostats", "-loglevel", "error",
-             "-autoexit", "-nodisp", "-af", "volume=%.3f" % gain, url],
-            shell=False)
+        tap = self.vu_sink is not None
+        self.process = subprocess.Popen(self.player_command(url), shell=False,
+                                        stdout=subprocess.PIPE if tap else None)
+        if tap:
+            self.vu_sink(self.process.stdout)
 
     def stop(self):
         logger.debug("stopping media player")
@@ -267,24 +323,29 @@ class LivemasjidClient:
         return self.volume
 
     def set_volume(self, v):
-        """Set volume 0-100, persist it, and re-apply live by relaunching the
-        current stream (ffmpeg has no runtime volume control for a live feed)."""
+        """Set volume 0-100 and persist it. Applied live through the ALSA mixer;
+        without one, the stream is relaunched with the new gain."""
         self.volume = max(0, min(100, int(v)))
         try:
             self.cfg.update(volume=self.volume)
         except Exception as e:
             logger.error("Could not persist volume: %s", e)
-        if self.state.get("status") == "playing" and self.current_url:
+        mixer = getattr(self, "mixer", None)
+        if mixer is not None and mixer.available:
+            mixer.set(self.volume)
+        elif self.state.get("status") == "playing" and self.current_url:
             self.playurl(self.current_url)
         return self.volume
 
     def nudge_volume(self, delta):
-        """Change volume instantly in memory, then apply it (relaunch the stream
-        and write settings.toml) once the buttons have been quiet for a moment.
-        Holding a button fires this many times a second; applying each one would
-        restart ffplay constantly and hammer the SD card."""
+        """Button volume change. With a live mixer it is heard immediately and only
+        the settings.toml write waits for the buttons to go quiet. Without one,
+        the whole change waits, because applying it restarts the stream."""
         with self._vol_lock:
             self.volume = max(0, min(100, self.volume + delta))
+            mixer = getattr(self, "mixer", None)
+            if mixer is not None and mixer.available:
+                mixer.set(self.volume)
             if self._vol_timer is not None:
                 self._vol_timer.cancel()
             self._vol_timer = threading.Timer(self.VOLUME_COMMIT_DELAY, self._commit_volume)
@@ -368,6 +429,66 @@ def write_pinned(pinned: pinned):
     ordered = list(dict.fromkeys(pinned.pinned))
     config.update(pinned=ordered)
     return {"pinned": ordered}
+
+# ---------------------------------------------------------------------------
+# Pimoroni pHAT BEAT settings (LEDs, VU meter). Only meaningful when
+# settings.toml has pimoroni = true; the web UI hides the panel otherwise.
+# ---------------------------------------------------------------------------
+hardware = None  # PhatBeatControls, set in main() when the pHAT BEAT is enabled
+
+
+class HardwareSettings(BaseModel):
+    vu_meter: Optional[bool] = None
+    led_flip: Optional[bool] = None
+    led_scheme: Optional[str] = None
+    led_brightness: Optional[int] = None
+    boot_animation: Optional[bool] = None
+
+
+def _hardware_state():
+    from pimoroni import SCHEMES
+    state = {"pimoroni": bool(livemasjid.pimoroni), "active": hardware is not None,
+             "schemes": {name: ["#%02x%02x%02x" % c for c in colours] for name, colours in SCHEMES.items()}}
+    if hardware is not None:
+        state.update(hardware.settings())
+    return state
+
+
+@app.get("/hardware")
+def read_hardware():
+    return _hardware_state()
+
+
+@app.post("/hardware")
+def write_hardware(new: HardwareSettings):
+    if hardware is None:
+        raise HTTPException(status_code=409, detail="pHAT BEAT is not enabled on this device")
+    values = {k: v for k, v in new.dict().items() if v is not None}
+    try:
+        restart = hardware.apply(**values)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    config.update(**values)
+    if restart and livemasjid.is_playing() and livemasjid.playing:
+        livemasjid.playmount(livemasjid.playing)   # relaunch with or without the VU tap
+    return _hardware_state()
+
+
+@app.post("/hardware/test")
+def test_hardware():
+    if hardware is None:
+        raise HTTPException(status_code=409, detail="pHAT BEAT is not enabled on this device")
+    hardware.test_leds()
+    return {"ok": True}
+
+
+@app.post("/hardware/kitt")
+def kitt_hardware():
+    if hardware is None:
+        raise HTTPException(status_code=409, detail="pHAT BEAT is not enabled on this device")
+    threading.Thread(target=hardware.kitt, daemon=True).start()
+    return {"ok": True}
+
 
 @app.get("/server_url")
 def read_server_url():
@@ -531,16 +652,23 @@ def mounts():
 def main():
     logger.info("Starting..")
     parser = argparse.ArgumentParser(description='Linux client for Livemasjid.com streams.')
-    livemasjid.connect()
-
     # Physical buttons + LEDs, if a pHAT BEAT is fitted and enabled in
     # settings.toml. Buttons arrive as kernel key events (see pimoroni.py).
+    # Set up before connecting, so the first stream already feeds the VU meter.
+    global hardware
     if livemasjid.pimoroni:
         try:
-            from pimoroni import PhatBeatControls
-            PhatBeatControls(livemasjid).start()
+            from pimoroni import PhatBeatControls, DEFAULT_SCHEME
+            hardware = PhatBeatControls(livemasjid,
+                                        flip=bool(config.get("led_flip", True)),
+                                        vu_meter=bool(config.get("vu_meter", True)),
+                                        scheme=config.get("led_scheme", DEFAULT_SCHEME),
+                                        brightness=config.get("led_brightness", 10),
+                                        boot_animation=bool(config.get("boot_animation", True))).start()
         except Exception as e:  # never let a hardware problem take the player down
             logger.error("Pimoroni controls disabled: %s", e)
+
+    livemasjid.connect()
 
     #Start the API
     # NOTE: reload=True spawns a filesystem watcher that pegs the Pi Zero's

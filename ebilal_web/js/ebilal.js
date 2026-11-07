@@ -439,8 +439,76 @@ function toggleSettings() {
   if (opening) {
     getLog();
     getVersion();
+    getHardware();
   }
 }
+
+/* ---------- pHAT BEAT lights (only shown when the hardware is enabled) ---------- */
+let hw = null;
+
+function getHardware() {
+  return fetch(apiurl + "hardware")
+    .then((r) => r.json())
+    .then((d) => {
+      hw = d;
+      renderHardware();
+    })
+    .catch(() => ($("hw-block").hidden = true));
+}
+
+function renderHardware() {
+  const block = $("hw-block");
+  block.hidden = !(hw && hw.active && hw.leds_available !== false);
+  if (block.hidden) return;
+  $("hw-vu").checked = !!hw.vu_meter;
+  $("hw-boot").checked = !!hw.boot_animation;
+  $("hw-flip").checked = !!hw.led_flip;
+  $("hw-bright").value = hw.led_brightness;
+  $("hw-bright-val").textContent = hw.led_brightness + "%";
+  $("hw-schemes").innerHTML = Object.entries(hw.schemes)
+    .map(([name, colours]) => {
+      const on = name === hw.led_scheme;
+      const grad = `linear-gradient(to top, ${colours.join(", ")})`;
+      return `<button class="scheme${on ? " is-active" : ""}" role="radio" aria-checked="${on}"
+        data-scheme="${esc(name)}" title="${esc(name)}" aria-label="${esc(name)} colours">
+        <span class="scheme-swatch" style="background:${grad}"></span><span>${esc(name)}</span></button>`;
+    })
+    .join("");
+}
+
+function setHardware(change, note) {
+  $("hw-status").textContent = "Saving…";
+  return fetch(apiurl + "hardware", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(change),
+  })
+    .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+    .then((d) => {
+      hw = d;
+      renderHardware();
+      $("hw-status").textContent = note || "Saved.";
+    })
+    .catch(() => ($("hw-status").textContent = "Could not save. Is eBilal reachable?"));
+}
+
+document.addEventListener("change", (e) => {
+  const key = e.target.dataset && e.target.dataset.hw;
+  if (key) {
+    const note = key === "vu_meter" ? "Saved. The stream restarts briefly to apply it." : "Saved.";
+    setHardware({ [key]: e.target.checked }, note);
+  }
+  if (e.target.id === "hw-bright") setHardware({ led_brightness: +e.target.value });
+});
+document.addEventListener("input", (e) => {
+  if (e.target.id === "hw-bright") $("hw-bright-val").textContent = e.target.value + "%";
+});
+document.addEventListener("click", (e) => {
+  const sch = e.target.closest("[data-scheme]");
+  if (sch) setHardware({ led_scheme: sch.dataset.scheme }).then(() => fetch(apiurl + "hardware/test", { method: "POST" }));
+  if (e.target.closest("#btn-hw-test")) fetch(apiurl + "hardware/test", { method: "POST" });
+  if (e.target.closest("#btn-hw-kitt")) fetch(apiurl + "hardware/kitt", { method: "POST" });
+});
 
 function getVersion() {
   fetch(apiurl + "version")

@@ -11,7 +11,7 @@
  *   fonts (Google)           stale-while-revalidate
  *   /api/, Livemasjid status straight to the network, never cached
  */
-const CACHE = "ebilal-shell-v4";
+const CACHE = "ebilal-shell-v5";
 const SHELL = [
   "/",
   "/css/style.css",

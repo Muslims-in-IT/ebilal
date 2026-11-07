@@ -132,3 +132,45 @@ def test_stopped_message_for_other_mount_does_not_silence_player(app_mod, monkey
         payload = b"stopped"
     p.on_message(None, None, Msg)
     assert stops == []
+
+
+def test_perceptual_gain_curve(app_mod):
+    g = app_mod.perceptual_gain
+    assert g(0) == 0.0 and abs(g(100) - 1.0) < 1e-9
+    assert abs(g(50) - 0.1) < 1e-3          # -20 dB, clearly quieter than linear 0.5
+
+
+def test_mixer_used_live_without_restart(app_mod, monkeypatch):
+    p = app_mod.livemasjid
+    calls = []
+
+    class FakeMixer:
+        available = True
+        control = "PCM"
+        def set(self, v):
+            calls.append(v)
+            return True
+
+    p.mixer = FakeMixer()
+    restarts = []
+    monkeypatch.setattr(p, "playurl", lambda url: restarts.append(url))
+    p.state["status"] = "playing"; p.current_url = "http://x/a"
+    p.set_volume(40)
+    p.nudge_volume(+5)
+    assert calls == [40, 45] and restarts == []
+
+
+def test_player_command_with_and_without_vu_tap(app_mod):
+    p = app_mod.livemasjid
+    p.vu_sink = None
+    assert p.player_command("http://x/a")[0] == "ffplay"
+    p.vu_sink = lambda pipe: None
+    cmd = p.player_command("http://x/a")
+    assert cmd[0] == "ffmpeg" and "pipe:1" in cmd and "alsa" in cmd
+    p.vu_sink = None
+
+
+def test_hardware_api_when_not_enabled(client):
+    d = client.get("/hardware").json()
+    assert d["active"] is False and "classic" in d["schemes"]
+    assert client.post("/hardware", json={"led_scheme": "ocean"}).status_code == 409

@@ -170,6 +170,31 @@
         </div>
       </div>
 
+      <div class="setting-block" id="hw-block" hidden>
+        <div class="setting-label">pHAT BEAT lights</div>
+        <label class="toggle-row">
+          <span>VU meter <small>lights dance to the audio</small></span>
+          <input type="checkbox" id="hw-vu" data-hw="vu_meter">
+        </label>
+        <label class="toggle-row">
+          <span>Startup sweep <small>KITT-style scanner when eBilal starts</small></span>
+          <input type="checkbox" id="hw-boot" data-hw="boot_animation">
+        </label>
+        <label class="toggle-row">
+          <span>Flip lights <small>if the bars grow from the top</small></span>
+          <input type="checkbox" id="hw-flip" data-hw="led_flip">
+        </label>
+        <div class="hw-sub">Colours</div>
+        <div class="scheme-row" id="hw-schemes" role="radiogroup" aria-label="Light colours"></div>
+        <label class="hw-sub" for="hw-bright">Brightness <span id="hw-bright-val"></span></label>
+        <input type="range" id="hw-bright" min="2" max="60" step="1" aria-label="Light brightness">
+        <div class="update-actions">
+          <button class="btn btn-ghost" id="btn-hw-test">Test lights</button>
+          <button class="btn btn-ghost" id="btn-hw-kitt">Sweep</button>
+        </div>
+        <p class="update-status" id="hw-status" role="status" aria-live="polite"></p>
+      </div>
+
       <div class="setting-block">
         <div class="setting-label">Software updates</div>
         <div id="update-box" class="update-box">
